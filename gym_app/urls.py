@@ -4,6 +4,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Health check (for Docker/container orchestration)
+    path('health/', views.health_check, name='health_check'),
+
     # Public pages
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),

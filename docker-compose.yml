@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: gym-db
+    environment:
+      POSTGRES_DB: gym_db
+      POSTGRES_USER: gymuser
+      POSTGRES_PASSWORD: gympass123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gymuser -d gym_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gym-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gym-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gym-network
+
+  # Ollama Service
+  ollama:
+    image: ollama/ollama:latest
+    container_name: gym-ollama
+    # IMPORTANT: Uncomment the next two lines if you have a GPU (NVIDIA)
+    # You'll need nvidia-docker for GPU support
+    # runtime: nvidia
+    # environment:
+    #   - NVIDIA_VISIBLE_DEVICES=all
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ollama_models:/root/.ollama/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - gym-network
+
+  # Django Web Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    container_name: gym-chatbot
+    command: /app/entrypoint.sh
+    environment:
+      DEBUG: "false"
+      SECRET_KEY: django-insecure-dev-key-change-in-production
+      DATABASE_URL: postgresql://gymuser:gympass123@db:5432/gym_db
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: qwen2.5:0.5b
+      OLLAMA_TIMEOUT: 60
+      REDIS_URL: redis://redis:6379/1
+      ALLOWED_HOSTS: localhost,127.0.0.1,web
+      CSRF_TRUSTED_ORIGINS: http://localhost:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - gym-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:
+  redis_data:
+  ollama_data:
+  ollama_models:
+  static_volume:
+  media_volume:
+  logs_volume:
+
+networks:
+  gym-network:
+    driver: bridge
