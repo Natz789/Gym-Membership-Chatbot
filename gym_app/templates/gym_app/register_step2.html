@@ -1,0 +1,307 @@
+{% extends 'gym_app/base.html' %}
+{% load static %}
+
+{% block title %}Create Account - Step 2{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/register.css' %}">
+<style>
+.progress-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--light-gray);
+    z-index: 0;
+}
+
+.progress-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+}
+
+.step-circle.active {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+.step-circle.completed {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+.step-label {
+    font-size: 0.85rem;
+    color: var(--gray);
+    font-weight: 500;
+    text-align: center;
+}
+
+.step-label.active {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.registration-card {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.card-header h2 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.card-header p {
+    color: var(--gray);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--dark-gray);
+}
+
+.form-group label .required {
+    color: var(--danger);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    flex: 1;
+    padding: 1rem;
+    background: white;
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--light-bg);
+}
+
+.btn-primary {
+    flex: 1;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="progress-container">
+    <div class="progress-steps">
+        <div class="progress-step">
+            <div class="step-circle completed"><i class="fas fa-check"></i></div>
+            <div class="step-label">Account Info</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle active">2</div>
+            <div class="step-label active">Personal Details</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">3</div>
+            <div class="step-label">Profile Photo</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">4</div>
+            <div class="step-label">Review</div>
+        </div>
+    </div>
+</div>
+
+<div class="registration-card">
+    <div class="card-header">
+        <h2><i class="fas fa-id-card"></i> Personal Information</h2>
+        <p>Step 2: Tell us about yourself</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="first_name">
+                    First Name <span class="required">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="first_name"
+                    name="first_name"
+                    class="form-control"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="last_name">
+                    Last Name <span class="required">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="last_name"
+                    name="last_name"
+                    class="form-control"
+                    required
+                >
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="mobile_no">
+                Mobile Number
+            </label>
+            <input
+                type="tel"
+                id="mobile_no"
+                name="mobile_no"
+                class="form-control"
+                placeholder="09XXXXXXXXX"
+                pattern="09[0-9]{9}"
+                title="Please enter a valid Philippine mobile number"
+            >
+            <small style="color: var(--gray);">Philippine format (09XXXXXXXXX)</small>
+        </div>
+
+        <div class="form-group">
+            <label for="birthdate">
+                Date of Birth
+            </label>
+            <input
+                type="date"
+                id="birthdate"
+                name="birthdate"
+                class="form-control"
+                max="{{ today|date:'Y-m-d' }}"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="address">
+                Address
+            </label>
+            <textarea
+                id="address"
+                name="address"
+                class="form-control"
+                rows="3"
+                placeholder="Complete address"
+            ></textarea>
+        </div>
+
+        <div class="btn-group">
+            <a href="{% url 'register_step1' %}" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <button type="submit" class="btn-primary">
+                Continue <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Set max date to today for birthdate
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('birthdate').setAttribute('max', today);
+});
+</script>
+{% endblock %}

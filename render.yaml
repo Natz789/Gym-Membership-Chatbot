@@ -1,0 +1,61 @@
+services:
+  - type: web
+    name: gym-membership-chatbot
+    env: python
+    region: singapore
+    plan: starter
+
+    # Build configuration
+    buildCommand: bash build.sh
+
+    # Start command
+    startCommand: gunicorn gym_project.wsgi:application
+
+    # Environment variables
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: gym_project.settings
+
+      - key: DEBUG
+        value: "false"
+
+      - key: DATABASE_URL
+        sync: false
+
+      - key: SECRET_KEY
+        sync: false
+
+      - key: ALLOWED_HOSTS
+        value: "gym-membership-chatbot.onrender.com,*.onrender.com,127.0.0.1,localhost"
+
+      - key: OLLAMA_HOST
+        value: "http://localhost:11434"
+
+      - key: OLLAMA_MODEL
+        value: "qwen2.5:0.5b"
+
+      - key: REDIS_URL
+        sync: false
+
+    # Auto-deploy on push
+    autoDeploy: true
+
+    # Health check
+    healthCheckPath: /
+
+    # Prebuilt Docker image (optional)
+    dockerfilePath: Dockerfile
+
+    # Disk for static and media files
+    disk:
+      name: gym-data
+      mountPath: /opt/render/project/data
+      sizeGB: 1
+
+databases:
+  - name: gym-database
+    databaseName: gym_4iym
+    user: gym_4iym_user
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: "Allow all IPs"

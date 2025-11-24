@@ -1,0 +1,146 @@
+ .subscribe-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+
+    .plan-summary {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+        color: var(--white);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .plan-summary h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .plan-summary .price {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--gold);
+        margin: 1rem 0;
+    }
+
+    .subscription-card {
+        background: var(--white);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .form-section h3 {
+        color: var(--primary-blue);
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--dark-gray);
+        font-weight: 500;
+    }
+
+    .form-group label i {
+        color: var(--secondary-blue);
+        margin-right: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--secondary-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .payment-option {
+        position: relative;
+    }
+
+    .payment-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .payment-option label {
+        display: block;
+        padding: 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .payment-option input[type="radio"]:checked + label {
+        border-color: var(--secondary-blue);
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .payment-option label i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--secondary-blue);
+    }
+
+    .summary-box {
+        background-color: var(--light-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-top: 2rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .summary-row:last-child {
+        border-bottom: none;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 1.25rem;
+        font-size: 1.2rem;
+        margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .payment-methods {
+            grid-template-columns: 1fr;
+        }
+    }

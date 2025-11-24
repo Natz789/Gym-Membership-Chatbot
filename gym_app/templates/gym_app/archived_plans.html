@@ -1,0 +1,150 @@
+{% extends 'gym_app/base_sidebar.html' %}
+{% load static %}
+
+{% block title %}Archived Plans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/manage_plans.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-archive"></i> Archived Plans</h1>
+        <p>View and restore archived membership and walk-in plans</p>
+        <a href="{% url 'manage_plans' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Manage Plans
+        </a>
+    </div>
+
+    <div class="plans-section">
+        <h2><i class="fas fa-id-card"></i> Archived Membership Plans</h2>
+
+        {% if archived_memberships %}
+        <div class="table-container">
+            <table class="plans-table">
+                <thead>
+                    <tr>
+                        <th>Plan Name</th>
+                        <th>Duration</th>
+                        <th>Price</th>
+                        <th>Archived By</th>
+                        <th>Archived On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plan in archived_memberships %}
+                    <tr>
+                        <td><strong>{{ plan.name }}</strong></td>
+                        <td>{{ plan.duration_days }} days</td>
+                        <td>₱{{ plan.price }}</td>
+                        <td>{{ plan.archived_by.get_full_name|default:"System" }}</td>
+                        <td>{{ plan.archived_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <form method="POST" action="{% url 'restore_membership_plan' plan.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm"
+                                        onclick="return confirm('Restore this plan?')">
+                                    <i class="fas fa-undo"></i> Restore
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>No archived membership plans</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="plans-section">
+        <h2><i class="fas fa-ticket-alt"></i> Archived Walk-In Plans</h2>
+
+        {% if archived_walkin %}
+        <div class="table-container">
+            <table class="plans-table">
+                <thead>
+                    <tr>
+                        <th>Pass Name</th>
+                        <th>Duration</th>
+                        <th>Price</th>
+                        <th>Archived By</th>
+                        <th>Archived On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pass in archived_walkin %}
+                    <tr>
+                        <td><strong>{{ pass.name }}</strong></td>
+                        <td>{{ pass.duration_days }} days</td>
+                        <td>₱{{ pass.price }}</td>
+                        <td>{{ pass.archived_by.get_full_name|default:"System" }}</td>
+                        <td>{{ pass.archived_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <form method="POST" action="{% url 'restore_walkin_plan' pass.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm"
+                                        onclick="return confirm('Restore this pass?')">
+                                    <i class="fas fa-undo"></i> Restore
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>No archived walk-in plans</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.plans-section {
+    margin: 3rem 0;
+}
+
+.plans-section h2 {
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}

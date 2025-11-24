@@ -1,0 +1,311 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Team Management - GymFit Pro{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/members_list.css' %}">
+{% block extra_css %}{% endblock %}
+
+<!-- Breadcrumb Navigation -->
+<nav aria-label="Breadcrumb" class="breadcrumb-nav">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Team Management</li>
+    </ol>
+</nav>
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-users-cog"></i> Team Management</h1>
+        <p class="page-subtitle">Manage your gym's staff members and view member information</p>
+        <div class="header-counts">
+            {% if user.is_admin or user.role == 'staff' %}
+            <span class="count-badge count-badge-staff">
+                <i class="fas fa-user-tie"></i>
+                <span>{{ staff.count }} Staff</span>
+            </span>
+            {% endif %}
+            <span class="count-badge count-badge-member">
+                <i class="fas fa-users"></i>
+                <span>{{ members.count }} Members</span>
+            </span>
+        </div>
+    </div>
+    {% if user.is_admin %}
+    <a href="{% url 'create_staff' %}" class="btn btn-warning" aria-label="Add new staff member">
+        <i class="fas fa-user-plus"></i> Add Staff Member
+    </a>
+    {% endif %}
+</div>
+
+<!-- Search Box -->
+<div class="search-box">
+    <form method="get" action="{% url 'members_list' %}" class="search-form" role="search" aria-label="Search team members">
+        <div class="search-input-wrapper">
+            <i class="fas fa-search search-icon" aria-hidden="true"></i>
+            <label for="search" class="sr-only">Search by name, email, username, or mobile number</label>
+            <input
+                type="text"
+                id="search"
+                name="search"
+                class="search-input"
+                placeholder="Search by name, email, username, or mobile number..."
+                value="{{ search_query }}"
+                aria-describedby="search-help"
+            >
+            <span id="search-help" class="sr-only">Enter name, email, username, or mobile number to search</span>
+            {% if search_query %}
+            <button type="button" class="search-clear" aria-label="Clear search" onclick="clearSearch()">
+                <i class="fas fa-times"></i>
+            </button>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Search
+        </button>
+        {% if search_query %}
+        <a href="{% url 'members_list' %}" class="btn btn-gold" aria-label="Clear search and show all">
+            <i class="fas fa-times"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Staff Section -->
+{% if user.is_admin or user.role == 'staff' %}
+<div class="section-header">
+    <h2>
+        <i class="fas fa-user-tie"></i> Staff Members
+        {% if user.role == 'staff' and not user.is_admin %}
+        <span class="view-only-badge">View Only</span>
+        {% endif %}
+    </h2>
+</div>
+<div class="table-container" role="region" aria-label="Staff members table">
+    {% if staff %}
+    <p style="color: var(--gray); margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i>
+        Showing {{ staff.count }} staff member{{ staff.count|pluralize }}
+        {% if search_query %}for "{{ search_query }}"{% endif %}
+    </p>
+    <table role="table" aria-label="Staff members list">
+        <thead role="rowgroup">
+            <tr role="row">
+                <th role="columnheader" scope="col">Name</th>
+                <th role="columnheader" scope="col">Username</th>
+                <th role="columnheader" scope="col">Email</th>
+                <th role="columnheader" scope="col">Mobile</th>
+                <th role="columnheader" scope="col">Age</th>
+                <th role="columnheader" scope="col">Role</th>
+                <th role="columnheader" scope="col">Joined</th>
+                <th role="columnheader" scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody role="rowgroup">
+            {% for staff_member in staff %}
+            <tr role="row">
+                <td role="cell" data-label="Name" class="member-name">{{ staff_member.get_full_name }}</td>
+                <td role="cell" data-label="Username">{{ staff_member.username }}</td>
+                <td role="cell" data-label="Email">{{ staff_member.email }}</td>
+                <td role="cell" data-label="Mobile">{{ staff_member.mobile_no|default:"N/A" }}</td>
+                <td role="cell" data-label="Age">{{ staff_member.age|default:"N/A" }}</td>
+                <td role="cell" data-label="Role">
+                    <span class="badge badge-staff">
+                        <i class="fas fa-user-tie" aria-hidden="true"></i>
+                        {{ staff_member.role }}
+                    </span>
+                </td>
+                <td role="cell" data-label="Joined">{{ staff_member.date_joined|date:"M d, Y" }}</td>
+                <td role="cell" data-label="Actions">
+                    <a href="{% url 'staff_detail' staff_member.id %}" class="btn-view" aria-label="View details for {{ staff_member.get_full_name }}">
+                        <i class="fas fa-eye" aria-hidden="true"></i> View
+                    </a>
+                    {% if user.is_admin %}
+                    <a href="{% url 'edit_staff' staff_member.id %}" class="btn-edit" aria-label="Edit details for {{ staff_member.get_full_name }}">
+                        <i class="fas fa-edit" aria-hidden="true"></i> Edit
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-user-tie" aria-hidden="true"></i>
+        </div>
+        <h2>No Staff Members {% if search_query %}Found{% else %}Yet{% endif %}</h2>
+        <p>
+            {% if search_query %}
+                No staff members match your search "{{ search_query }}"
+            {% else %}
+                Start building your team by adding your first staff member
+            {% endif %}
+        </p>
+        {% if user.is_admin and not search_query %}
+        <a href="{% url 'create_staff' %}" class="btn btn-warning btn-lg">
+            <i class="fas fa-user-plus"></i> Add First Staff Member
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Members Section -->
+<div class="section-header" style="margin-top: 2rem;">
+    <h2><i class="fas fa-users"></i> Members</h2>
+</div>
+<div class="table-container" role="region" aria-label="Gym members table">
+    {% if members %}
+    <p style="color: var(--gray); margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i>
+        Showing {{ members.count }} member{{ members.count|pluralize }}
+        {% if search_query %}for "{{ search_query }}"{% endif %}
+    </p>
+    <table role="table" aria-label="Gym members list">
+        <thead role="rowgroup">
+            <tr role="row">
+                <th role="columnheader" scope="col">Name</th>
+                <th role="columnheader" scope="col">Username</th>
+                <th role="columnheader" scope="col">Email</th>
+                <th role="columnheader" scope="col">Mobile</th>
+                <th role="columnheader" scope="col">Age</th>
+                <th role="columnheader" scope="col">Role</th>
+                <th role="columnheader" scope="col">Joined</th>
+                <th role="columnheader" scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody role="rowgroup">
+            {% for member in members %}
+            <tr role="row">
+                <td role="cell" data-label="Name" class="member-name">{{ member.get_full_name }}</td>
+                <td role="cell" data-label="Username">{{ member.username }}</td>
+                <td role="cell" data-label="Email">{{ member.email }}</td>
+                <td role="cell" data-label="Mobile">{{ member.mobile_no|default:"N/A" }}</td>
+                <td role="cell" data-label="Age">{{ member.age|default:"N/A" }}</td>
+                <td role="cell" data-label="Role">
+                    <span class="badge badge-member">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                        {{ member.role }}
+                    </span>
+                </td>
+                <td role="cell" data-label="Joined">{{ member.date_joined|date:"M d, Y" }}</td>
+                <td role="cell" data-label="Actions">
+                    <a href="{% url 'member_detail' member.id %}" class="btn-view" aria-label="View details for {{ member.get_full_name }}">
+                        <i class="fas fa-eye" aria-hidden="true"></i> View
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-user-slash" aria-hidden="true"></i>
+        </div>
+        <h2>No Members {% if search_query %}Found{% else %}Yet{% endif %}</h2>
+        <p>
+            {% if search_query %}
+                No members match your search "{{ search_query }}"
+            {% else %}
+                There are no registered members yet.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;" aria-live="polite" aria-busy="false">
+    <div class="loading-spinner">
+        <div class="spinner" role="status"></div>
+        <p>Loading...</p>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Clear search function
+function clearSearch() {
+    document.getElementById('search').value = '';
+    document.querySelector('.search-form').submit();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Alt + S = Focus search
+    if (e.altKey && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('search').focus();
+    }
+
+    // Alt + N = New staff (if admin)
+    if (e.altKey && e.key === 'n' && {{ user.is_admin|lower }}) {
+        e.preventDefault();
+        window.location.href = "{% url 'create_staff' %}";
+    }
+});
+
+// Toast notification system
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+
+    const iconMap = {
+        'success': 'check-circle',
+        'error': 'exclamation-circle',
+        'warning': 'exclamation-triangle',
+        'info': 'info-circle'
+    };
+
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="fas fa-${iconMap[type] || 'info-circle'}" aria-hidden="true"></i>
+        </div>
+        <div class="toast-message">${message}</div>
+        <button class="toast-close" onclick="this.parentElement.remove()" aria-label="Close notification">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    `;
+
+    document.getElementById('toastContainer').appendChild(toast);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// Show Django messages as toasts
+{% if messages %}
+{% for message in messages %}
+showToast("{{ message|escapejs }}", "{{ message.tags|default:'info' }}");
+{% endfor %}
+{% endif %}
+
+// Show loading overlay on form submit
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function() {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        loadingOverlay.style.display = 'flex';
+        loadingOverlay.setAttribute('aria-busy', 'true');
+    });
+});
+</script>
+{% endblock %}

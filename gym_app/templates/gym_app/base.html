@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gym Management System{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+
+
+    <link rel="stylesheet" href="{% static 'gym_app/css/base/base.css' %}">
+    {% block extra_css %}{% endblock %}
+   
+
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'home' %}" class="navbar-brand">
+                <i class="fas fa-dumbbell"></i>
+                Rhose Gym
+            </a>
+            
+            <ul class="navbar-menu">
+                <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a></li>
+                
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="{% url 'membership_plans' %}"><i class="fas fa-tag"></i> Plans</a></li>
+                    
+                    
+                    {% if user.is_staff_or_admin %}
+                        <li><a href="{% url 'walkin_purchase' %}"><i class="fas fa-cash-register"></i> Walk-in</a></li>
+                        <li><a href="{% url 'members_list' %}"><i class="fas fa-users"></i> Members</a></li>
+                        <li><a href="{% url 'pending_payments' %}"><i class="fas fa-clock"></i> Pending Payments</a></li>
+                    {% endif %}
+
+                    {% if user.is_admin %}
+                        <li><a href="{% url 'reports' %}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+                        <li><a href="{% url 'audit_trail' %}"><i class="fas fa-history"></i> Audit Trail</a></li>
+                        <li><a href="{% url 'archived_plans' %}"><i class="fas fa-archive"></i> Archived Plans</a></li>
+                        <li><a href="/admin/"><i class="fas fa-cog"></i> Admin</a></li>
+                    {% endif %}
+
+                    <li>
+                        <span style="color: var(--gold); margin-right: 0.5rem;">
+                            <i class="fas fa-user-circle"></i> {{ user.get_full_name|default:user.username }}
+                            <span class="user-badge badge-{{ user.role }}">{{ user.role }}</span>
+                        </span>
+                    </li>
+                    <li><a href="{% url 'profile_settings' %}"><i class="fas fa-user-cog"></i> Profile</a></li>
+                    <li><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li><a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                    <li><a href="{% url 'register' %}" class="btn-gold"><i class="fas fa-user-plus"></i> Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 GymFit Pro - Gym Management System</p>
+            <p>Built with <i class="fas fa-heart" style="color: var(--danger);"></i> using Django</p>
+            <p>
+                <a href="{% url 'about' %}">About</a> | 
+                <a href="#">Contact</a> | 
+                <a href="#">Privacy Policy</a>
+            </p>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

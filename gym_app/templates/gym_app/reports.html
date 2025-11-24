@@ -1,0 +1,114 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Reports & Analytics - GymFit Pro{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/reports.css' %}">
+{% block extra_css %}{% endblock %}
+
+
+
+<div class="page-header">
+    <h1><i class="fas fa-chart-bar"></i> Reports & Analytics</h1>
+    <p>Comprehensive financial and membership reports</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="stat-number">₱{{ total_revenue|floatformat:2 }}</div>
+        <div class="stat-label">Total Member Revenue</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon gold">
+            <i class="fas fa-walking"></i>
+        </div>
+        <div class="stat-number">₱{{ total_walkin_revenue|floatformat:2 }}</div>
+        <div class="stat-label">Total Walk-in Revenue</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-number">₱{{ grand_total|floatformat:2 }}</div>
+        <div class="stat-label">Grand Total Revenue</div>
+    </div>
+</div>
+
+<!-- Daily Analytics Table -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-calendar-alt"></i>
+        Daily Analytics (Last 30 Days)
+    </h2>
+    {% if recent_analytics %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Active Members</th>
+                <th>Passes Sold</th>
+                <th>Daily Sales</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for analytics in recent_analytics %}
+            <tr>
+                <td><strong>{{ analytics.date|date:"M d, Y" }}</strong></td>
+                <td>
+                    <i class="fas fa-users" style="color: var(--secondary-blue);"></i> 
+                    {{ analytics.total_members }}
+                </td>
+                <td>
+                    <i class="fas fa-ticket-alt" style="color: var(--gold);"></i> 
+                    {{ analytics.total_passes }}
+                </td>
+                <td><strong>₱{{ analytics.total_sales|floatformat:2 }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-chart-line"></i>
+        <p>No analytics data available</p>
+        <small>Run the management command to generate daily reports</small>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div style="background: linear-gradient(135deg, var(--light-bg) 0%, var(--white) 100%); padding: 2rem; border-radius: 15px;">
+    <h2 class="section-title">
+        <i class="fas fa-tools"></i>
+        Quick Actions
+    </h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <a href="/admin/" class="btn btn-primary" style="text-decoration: none; text-align: center;">
+            <i class="fas fa-cog"></i> Admin Panel
+        </a>
+        <a href="{% url 'members_list' %}" class="btn btn-gold" style="text-decoration: none; text-align: center;">
+            <i class="fas fa-users"></i> View Members
+        </a>
+        <button onclick="window.print()" class="btn btn-success" style="border: none;">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+    </div>
+</div>
+
+<!-- Info Box -->
+<div style="background: #dbeafe; padding: 1.5rem; border-radius: 12px; margin-top: 2rem; border-left: 4px solid var(--secondary-blue);">
+    <p style="margin: 0; color: var(--primary-blue); font-weight: 500;">
+        <i class="fas fa-info-circle"></i> 
+        <strong>Note:</strong> To generate daily analytics, run the management command: 
+        <code style="background: var(--white); padding: 0.25rem 0.5rem; border-radius: 4px;">python manage.py expire_memberships</code>
+    </p>
+</div>
+
+{% endblock %}

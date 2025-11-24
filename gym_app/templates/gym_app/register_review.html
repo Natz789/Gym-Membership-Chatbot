@@ -1,0 +1,338 @@
+{% extends 'gym_app/base.html' %}
+{% load static %}
+
+{% block title %}Review Registration{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/register.css' %}">
+<style>
+.progress-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--success);
+    z-index: 0;
+}
+
+.progress-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+}
+
+.step-circle.active {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+.step-circle.completed {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+.step-label {
+    font-size: 0.85rem;
+    color: var(--gray);
+    font-weight: 500;
+    text-align: center;
+}
+
+.step-label.active {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.registration-card {
+    max-width: 700px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.card-header h2 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.card-header p {
+    color: var(--gray);
+}
+
+.review-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--light-gray);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.info-item {
+    padding: 1rem;
+    background: var(--light-bg);
+    border-radius: 8px;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+.info-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    flex: 1;
+    padding: 1rem;
+    background: white;
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-secondary:hover {
+    background: var(--light-bg);
+}
+
+.btn-success {
+    flex: 2;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+}
+
+.confirmation-note {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 2rem;
+}
+
+.confirmation-note i {
+    color: #f59e0b;
+    margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="progress-container">
+    <div class="progress-steps">
+        <div class="progress-step">
+            <div class="step-circle completed"><i class="fas fa-check"></i></div>
+            <div class="step-label">Account Info</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle completed"><i class="fas fa-check"></i></div>
+            <div class="step-label">Personal Details</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle completed"><i class="fas fa-check"></i></div>
+            <div class="step-label">Profile Photo</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle active">4</div>
+            <div class="step-label active">Review</div>
+        </div>
+    </div>
+</div>
+
+<div class="registration-card">
+    <div class="card-header">
+        <h2><i class="fas fa-check-circle"></i> Review Your Information</h2>
+        <p>Step 4: Confirm your details before completing registration</p>
+    </div>
+
+    <div class="confirmation-note">
+        <i class="fas fa-info-circle"></i>
+        <strong>Please review carefully:</strong> Make sure all information is correct before submitting.
+    </div>
+
+    <!-- Account Information -->
+    <div class="review-section">
+        <div class="section-title">
+            <i class="fas fa-user-lock"></i> Account Information
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Username</div>
+                <div class="info-value">{{ data.username }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-value">{{ data.email }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="review-section">
+        <div class="section-title">
+            <i class="fas fa-id-card"></i> Personal Information
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">First Name</div>
+                <div class="info-value">{{ data.first_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Last Name</div>
+                <div class="info-value">{{ data.last_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Mobile Number</div>
+                <div class="info-value">{{ data.mobile_no|default:"Not provided" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date of Birth</div>
+                <div class="info-value">{{ data.birthdate|default:"Not provided" }}</div>
+            </div>
+            <div class="info-item full-width">
+                <div class="info-label">Address</div>
+                <div class="info-value">{{ data.address|default:"Not provided" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Photo -->
+    <div class="review-section">
+        <div class="section-title">
+            <i class="fas fa-camera"></i> Profile Photo
+        </div>
+        <div class="info-grid">
+            <div class="info-item full-width">
+                <div class="info-label">Profile Image</div>
+                <div class="info-value">
+                    {% if data.has_image %}
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i> Photo uploaded
+                    {% else %}
+                        <i class="fas fa-times-circle" style="color: var(--gray);"></i> No photo (can be added later)
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Hidden input to re-upload image if needed -->
+        <input type="file" name="profile_image" id="profileImageHidden" style="display:none;">
+
+        <div class="btn-group">
+            <a href="{% url 'register_step3' %}" class="btn-secondary">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <button type="submit" class="btn-success">
+                <i class="fas fa-check-double"></i> Complete Registration
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Store image from session if needed
+{% if request.session.temp_image %}
+// Fetch and set the temporary image
+fetch('/media/temp/{{ request.session.temp_image }}')
+    .then(response => response.blob())
+    .then(blob => {
+        const file = new File([blob], '{{ request.session.temp_image }}');
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        document.getElementById('profileImageHidden').files = dataTransfer.files;
+    });
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends 'gym_app/base.html' %}
+
+{% block title %}About Us - GymFit Pro{% endblock %}
+
+{% block content %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/about.css' %}">
+{% block extra_css %}{% endblock %}
+
+<div class="about-hero">
+    <h1><i class="fas fa-info-circle"></i> About GymFit Pro</h1>
+    <p>Your Partner in Fitness Excellence</p>
+</div>
+
+<div class="about-section">
+    <div class="about-content">
+        <div class="about-text">
+            <h2>Who We Are</h2>
+            <p>
+                GymFit Pro is a state-of-the-art gym management system designed to streamline 
+                membership management, payments, and fitness tracking. We combine modern technology 
+                with excellent service to provide the best fitness experience.
+            </p>
+            <p>
+                Our mission is to make gym management effortless for staff while providing members 
+                with an intuitive platform to track their fitness journey.
+            </p>
+        </div>
+        <div class="about-image">
+            <i class="fas fa-dumbbell"></i>
+        </div>
+    </div>
+
+    <div class="about-content">
+        <div class="about-image">
+            <i class="fas fa-trophy"></i>
+        </div>
+        <div class="about-text">
+            <h2>Our Vision</h2>
+            <p>
+                To be the leading gym management platform that empowers fitness centers 
+                to focus on what matters most - helping members achieve their health and 
+                fitness goals.
+            </p>
+            <p>
+                We believe in transparency, efficiency, and providing tools that make 
+                gym operations seamless and member experiences exceptional.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="about-section">
+    <h2 style="text-align: center; color: var(--primary-blue); font-size: 2.5rem; margin-bottom: 2rem;">
+        Our Impact
+    </h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">500+</div>
+            <div class="stat-label">Active Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">50+</div>
+            <div class="stat-label">Expert Trainers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Access Available</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">100%</div>
+            <div class="stat-label">Satisfaction Rate</div>
+        </div>
+    </div>
+</div>
+
+<div class="about-section">
+    <h2 style="text-align: center; color: var(--primary-blue); font-size: 2.5rem; margin-bottom: 2rem;">
+        System Features
+    </h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-users" style="font-size: 3rem; color: var(--secondary-blue); margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Member Management</h3>
+            <p style="color: var(--gray);">Easy tracking of member information and status</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-credit-card" style="font-size: 3rem; color: var(--gold); margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Payment Processing</h3>
+            <p style="color: var(--gray);">Multiple payment methods supported</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-chart-line" style="font-size: 3rem; color: var(--success); margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Analytics Dashboard</h3>
+            <p style="color: var(--gray);">Real-time insights and reports</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-mobile-alt" style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Responsive Design</h3>
+            <p style="color: var(--gray);">Access from any device, anywhere</p>
+        </div>
+    </div>
+</div>
+
+<div class="cta-section" style="background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%); padding: 3rem; border-radius: 20px; text-align: center; color: var(--primary-blue);">
+    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Ready to Join Us?</h2>
+    <p style="margin-bottom: 2rem;">Start your fitness journey with GymFit Pro today</p>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'register' %}" class="btn btn-primary" style="background: var(--primary-blue); color: var(--white);">
+        <i class="fas fa-user-plus"></i> Sign Up Now
+    </a>
+    {% else %}
+    <a href="{% url 'dashboard' %}" class="btn btn-primary" style="background: var(--primary-blue); color: var(--white);">
+        <i class="fas fa-chart-line"></i> Go to Dashboard
+    </a>
+    {% endif %}
+</div>
+
+{% endblock %}

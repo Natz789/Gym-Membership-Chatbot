@@ -1,0 +1,285 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Manage Plans - Rhose Gym{% endblock %}
+
+{% block page_title %}Manage Plans & Passes{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/manage_plans.css' %}">
+{% block extra_css %}{% endblock %}
+
+<!-- Tabs -->
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('membership')">
+        <i class="fas fa-crown"></i> Membership Plans
+    </button>
+    <button class="tab" onclick="switchTab('walkin')">
+        <i class="fas fa-ticket-alt"></i> Walk-in Passes
+    </button>
+</div>
+
+<!-- Membership Plans Tab -->
+<div id="membership-tab" class="tab-content active">
+    <div class="action-bar">
+        <h2 style="color: var(--primary-blue); margin: 0;">Membership Plans</h2>
+        <button class="btn btn-primary" onclick="openModal('membership', 'add')">
+            <i class="fas fa-plus"></i> Add New Plan
+        </button>
+    </div>
+
+    <div class="plans-grid">
+        {% for plan in membership_plans %}
+        <div class="plan-card {% if plan.duration_days >= 180 %}premium{% endif %}">
+            <div class="plan-header">
+                <div class="plan-icon">
+                    <i class="fas fa-{% if plan.duration_days >= 365 %}gem{% elif plan.duration_days >= 180 %}star{% elif plan.duration_days >= 90 %}calendar-check{% else %}calendar-day{% endif %}"></i>
+                </div>
+                <h3 class="plan-name">{{ plan.name }}</h3>
+                <span class="plan-status status-{% if plan.is_active %}active{% else %}inactive{% endif %}">
+                    {% if plan.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+
+            <div class="plan-price">₱{{ plan.price }}</div>
+            <div class="plan-duration">
+                <i class="fas fa-clock"></i> {{ plan.duration_days }} days
+            </div>
+
+            <p class="plan-description">
+                {{ plan.description|default:"Full access to gym facilities and equipment" }}
+            </p>
+
+            <div class="plan-actions">
+                <button class="btn-edit" onclick="openModal('membership', 'edit', {{ plan.id }})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn-toggle" onclick="toggleStatus('membership', {{ plan.id }}, {{ plan.is_active|lower }})">
+                    <i class="fas fa-toggle-{% if plan.is_active %}on{% else %}off{% endif %}"></i>
+                </button>
+                <button class="btn-delete" onclick="deletePlan('membership', {{ plan.id }}, '{{ plan.name }}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--gray);">
+            <i class="fas fa-inbox" style="font-size: 5rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+            <p>No membership plans yet. Add your first plan!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Walk-in Passes Tab -->
+<div id="walkin-tab" class="tab-content">
+    <div class="action-bar">
+        <h2 style="color: var(--primary-blue); margin: 0;">Walk-in Passes</h2>
+        <button class="btn btn-gold" onclick="openModal('walkin', 'add')">
+            <i class="fas fa-plus"></i> Add New Pass
+        </button>
+    </div>
+
+    <div class="plans-grid">
+        {% for pass in walkin_passes %}
+        <div class="plan-card">
+            <div class="plan-header">
+                <div class="plan-icon" style="color: var(--primary);">
+                    <i class="fas fa-walking"></i>
+                </div>
+                <h3 class="plan-name">{{ pass.name }}</h3>
+                <span class="plan-status status-{% if pass.is_active %}active{% else %}inactive{% endif %}">
+                    {% if pass.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+
+            <div class="plan-price" style="color: var(--primary);">₱{{ pass.price }}</div>
+            <div class="plan-duration">
+                <i class="fas fa-clock"></i> {{ pass.duration_days }} day{{ pass.duration_days|pluralize }}
+            </div>
+
+            <p class="plan-description">
+                {{ pass.description|default:"Short-term gym access for walk-in customers" }}
+            </p>
+
+            <div class="plan-actions">
+                <button class="btn-edit" onclick="openModal('walkin', 'edit', {{ pass.id }})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn-toggle" onclick="toggleStatus('walkin', {{ pass.id }}, {{ pass.is_active|lower }})">
+                    <i class="fas fa-toggle-{% if pass.is_active %}on{% else %}off{% endif %}"></i>
+                </button>
+                <button class="btn-delete" onclick="deletePlan('walkin', {{ pass.id }}, '{{ pass.name }}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--gray);">
+            <i class="fas fa-inbox" style="font-size: 5rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+            <p>No walk-in passes yet. Add your first pass!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="planModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">Add Plan</h2>
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="planForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" id="formAction">
+            <input type="hidden" name="plan_type" id="formType">
+            <input type="hidden" name="plan_id" id="formId">
+
+            <div class="form-group">
+                <label for="name">Plan Name *</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="duration_days">Duration (Days) *</label>
+                <input type="number" id="duration_days" name="duration_days" class="form-control" min="1" required>
+                <div class="form-note" id="premiumNote" style="display: none;">
+                    <i class="fas fa-star"></i> Plans with 180+ days are automatically marked as Premium
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="price">Price (₱) *</label>
+                <input type="number" id="price" name="price" class="form-control" step="0.01" min="0" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="3" placeholder="Describe what this plan includes..."></textarea>
+            </div>
+
+            <div class="form-group" id="premiumToggleGroup" style="display: none;">
+                <div class="premium-toggle">
+                    <input type="checkbox" id="is_premium" name="is_premium" disabled>
+                    <label for="is_premium">
+                        <i class="fas fa-crown"></i> Premium Plan (6+ months)
+                    </label>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-success" style="flex: 1;">
+                    <i class="fas fa-save"></i> Save Plan
+                </button>
+                <button type="button" class="btn btn-danger" onclick="closeModal()" style="flex: 1;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchTab(tab) {
+    // Update tabs
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Update content
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(tab + '-tab').classList.add('active');
+}
+
+function openModal(type, action, id = null) {
+    const modal = document.getElementById('planModal');
+    const form = document.getElementById('planForm');
+    const title = document.getElementById('modalTitle');
+    
+    // Reset form
+    form.reset();
+    document.getElementById('formAction').value = action;
+    document.getElementById('formType').value = type;
+    document.getElementById('formId').value = id || '';
+    
+    // Set title
+    if (action === 'add') {
+        title.textContent = `Add New ${type === 'membership' ? 'Membership Plan' : 'Walk-in Pass'}`;
+    } else {
+        title.textContent = `Edit ${type === 'membership' ? 'Membership Plan' : 'Walk-in Pass'}`;
+        // Load plan data here via AJAX if needed
+    }
+    
+    // Show/hide premium toggle for membership plans
+    if (type === 'membership') {
+        document.getElementById('premiumToggleGroup').style.display = 'block';
+        document.getElementById('premiumNote').style.display = 'block';
+    } else {
+        document.getElementById('premiumToggleGroup').style.display = 'none';
+        document.getElementById('premiumNote').style.display = 'none';
+    }
+    
+    modal.classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('planModal').classList.remove('active');
+}
+
+// Check premium status when duration changes
+document.getElementById('duration_days').addEventListener('input', function() {
+    const days = parseInt(this.value);
+    const premiumCheckbox = document.getElementById('is_premium');
+    
+    if (days >= 180) {
+        premiumCheckbox.checked = true;
+    } else {
+        premiumCheckbox.checked = false;
+    }
+});
+
+function toggleStatus(type, id, currentStatus) {
+    if (confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this plan?`)) {
+        // Submit form to toggle status
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle">
+            <input type="hidden" name="plan_type" value="${type}">
+            <input type="hidden" name="plan_id" value="${id}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function deletePlan(type, id, name) {
+    if (confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="plan_type" value="${type}">
+            <input type="hidden" name="plan_id" value="${id}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('planModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

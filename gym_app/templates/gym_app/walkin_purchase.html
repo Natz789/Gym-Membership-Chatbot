@@ -1,0 +1,181 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Walk-in Purchase - GymFit Pro{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/walkin_purchase.css' %}">
+{% block extra_css %}{% endblock %}
+
+
+<div class="page-header">
+    <h1><i class="fas fa-cash-register"></i> Walk-in Purchase</h1>
+    <p>Process walk-in pass sales quickly and efficiently</p>
+</div>
+
+<div class="content-grid">
+    <!-- Purchase Form -->
+    <div>
+        <div class="form-card">
+            <form method="post" action="{% url 'walkin_purchase' %}">
+                {% csrf_token %}
+
+                <div class="section-title">
+                    <i class="fas fa-ticket-alt"></i>
+                    Select Pass Type
+                </div>
+
+                <div class="pass-options">
+                    {% for pass in passes %}
+                    <div class="pass-option">
+                        <input type="radio" id="pass_{{ pass.id }}" name="pass_id" value="{{ pass.id }}" required {% if forloop.first %}checked{% endif %}>
+                        <label for="pass_{{ pass.id }}">
+                            <div class="pass-info">
+                                <h4>{{ pass.name }}</h4>
+                                <p><i class="fas fa-clock"></i> {{ pass.duration_days }} day{{ pass.duration_days|pluralize }}</p>
+                            </div>
+                            <div class="pass-price">₱{{ pass.price }}</div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="section-title" style="margin-top: 2rem;">
+                    <i class="fas fa-user"></i>
+                    Customer Info (Optional)
+                </div>
+
+                <div class="form-group">
+                    <label for="customer_name">
+                        <i class="fas fa-user"></i> Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="customer_name" 
+                        name="customer_name" 
+                        class="form-control" 
+                        placeholder="Enter customer name (optional)"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="mobile_no">
+                        <i class="fas fa-phone"></i> Mobile Number
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="mobile_no" 
+                        name="mobile_no" 
+                        class="form-control" 
+                        placeholder="09123456789 (optional)"
+                    >
+                </div>
+
+                <div class="section-title">
+                    <i class="fas fa-credit-card"></i>
+                    Payment Method
+                </div>
+
+                <div class="payment-methods">
+                    <div class="payment-option">
+                        <input type="radio" id="cash" name="payment_method" value="cash" required checked>
+                        <label for="cash">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <div>Cash</div>
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" id="gcash" name="payment_method" value="gcash" required>
+                        <label for="gcash">
+                            <i class="fas fa-mobile-alt"></i>
+                            <div>GCash</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="reference_no">
+                        <i class="fas fa-hashtag"></i> Reference Number
+                    </label>
+                    <input 
+                        type="text" 
+                        id="reference_no" 
+                        name="reference_no" 
+                        class="form-control" 
+                        placeholder="Transaction reference (optional)"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-gold btn-submit">
+                    <i class="fas fa-check-circle"></i> Process Sale
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Sales -->
+    <div>
+        <div class="recent-sales">
+            <h2 class="section-title">
+                <i class="fas fa-history"></i>
+                Recent Sales
+            </h2>
+
+            {% if recent_walkins %}
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Pass</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for walkin in recent_walkins %}
+                        <tr>
+                            <td><strong>{{ walkin.customer_name|default:"Guest" }}</strong></td>
+                            <td>{{ walkin.pass_type.name }}</td>
+                            <td><strong>₱{{ walkin.amount }}</strong></td>
+                            <td><span class="badge badge-active">{{ walkin.method|upper }}</span></td>
+                            <td>{{ walkin.payment_date|date:"h:i A" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.5; margin-bottom: 0.5rem;"></i>
+                <p>No recent sales</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="recent-sales" style="margin-top: 2rem;">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                Today's Summary
+            </h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: var(--light-bg); padding: 1rem; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--secondary-blue);">
+                        {{ recent_walkins|length }}
+                    </div>
+                    <div style="color: var(--gray); font-size: 0.875rem;">Total Sales Today</div>
+                </div>
+                <div style="background: var(--light-bg); padding: 1rem; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--gold);">
+                        ₱{% widthratio recent_walkins|length 1 1 %}0
+                    </div>
+                    <div style="color: var(--gray); font-size: 0.875rem;">Estimated Revenue</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

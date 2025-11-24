@@ -1,0 +1,201 @@
+{% extends 'gym_app/base.html' %}
+
+{% block title %}Member Dashboard - GymFit Pro{% endblock %}
+
+{% block content %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/dashboard_member.css' %}">
+{% block extra_css %}{% endblock %}
+
+<div class="dashboard-header">
+    <h1><i class="fas fa-user"></i> My Dashboard</h1>
+    <p>Welcome back, {{ user.get_full_name }}! Here's your membership overview.</p>
+</div>
+
+
+
+{% if user.kiosk_pin %}
+<div class="membership-card" style="border: 3px solid var(--gold);">
+    <div class="membership-header">
+        <div>
+            <h2 style="color: var(--primary-blue); margin: 0;">
+                <i class="fas fa-key"></i> Your Kiosk PIN
+            </h2>
+            <p style="color: var(--gray); margin: 0.5rem 0 0 0;">Use this PIN at the attendance kiosk</p>
+        </div>
+    </div>
+
+    <div style="text-align: center; padding: 2rem;">
+        <div style="background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%); 
+                    display: inline-block; 
+                    padding: 2rem 4rem; 
+                    border-radius: 20px;
+                    margin-bottom: 1rem;">
+            <div style="font-size: 4rem; 
+                        font-weight: 700; 
+                        letter-spacing: 1rem; 
+                        color: var(--primary-blue);
+                        font-family: 'Courier New', monospace;">
+                {{ user.kiosk_pin }}
+            </div>
+        </div>
+        <p style="color: var(--gray); margin-top: 1rem;">
+            <i class="fas fa-info-circle"></i> 
+            Keep this PIN secure. Use it to check in/out at the gym kiosk.
+        </p>
+        <a href="{% url 'kiosk_login' %}" target="_blank" class="btn btn-gold" style="margin-top: 1rem;">
+            <i class="fas fa-fingerprint"></i> Open Kiosk
+        </a>
+    </div>
+</div>
+{% endif %}
+
+
+<!-- Current Membership -->
+{% if current_membership %}
+<div class="membership-card">
+    <div class="membership-header">
+        <div>
+            <h2 style="color: var(--primary-blue); margin: 0;">{{ current_membership.plan.name }}</h2>
+            <p style="color: var(--gray); margin: 0.5rem 0 0 0;">Your Active Membership</p>
+        </div>
+        <span class="membership-status status-active">
+            <i class="fas fa-check-circle"></i> ACTIVE
+        </span>
+    </div>
+
+    <div class="membership-details">
+        <div class="detail-item">
+            <div class="detail-label">Start Date</div>
+            <div class="detail-value">{{ current_membership.start_date|date:"M d, Y" }}</div>
+        </div>
+
+        <div class="detail-item">
+            <div class="detail-label">End Date</div>
+            <div class="detail-value">{{ current_membership.end_date|date:"M d, Y" }}</div>
+        </div>
+
+        <div class="detail-item">
+            <div class="detail-label">Days Remaining</div>
+            <div class="detail-value">
+                <i class="fas fa-clock"></i> {{ current_membership.days_remaining }}
+            </div>
+        </div>
+
+        <div class="detail-item">
+            <div class="detail-label">Duration</div>
+            <div class="detail-value">{{ current_membership.plan.duration_days }} days</div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="no-membership">
+    <i class="fas fa-exclamation-circle"></i>
+    <h2>No Active Membership</h2>
+    <p style="color: var(--gray); margin-bottom: 2rem;">You don't have an active membership plan</p>
+    <a href="{% url 'membership_plans' %}" class="btn btn-gold">
+        <i class="fas fa-shopping-cart"></i> Browse Plans
+    </a>
+</div>
+{% endif %}
+
+<!-- Payment History -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-history"></i>
+        Payment History
+    </h2>
+    {% if payment_history %}
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Date</th>
+                <th>Reference</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payment_history %}
+            <tr>
+                <td><strong>{{ payment.membership.plan.name }}</strong></td>
+                <td><strong>₱{{ payment.amount }}</strong></td>
+                <td><span class="badge badge-active">{{ payment.method|upper }}</span></td>
+                <td>{{ payment.payment_date|date:"M d, Y h:i A" }}</td>
+                <td>{{ payment.reference_no|default:"N/A" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-receipt"></i>
+        <p>No payment history yet</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Membership History -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-list"></i>
+        All Memberships
+    </h2>
+    {% if all_memberships %}
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membership in all_memberships %}
+            <tr>
+                <td><strong>{{ membership.plan.name }}</strong></td>
+                <td>{{ membership.start_date|date:"M d, Y" }}</td>
+                <td>{{ membership.end_date|date:"M d, Y" }}</td>
+                <td>{{ membership.plan.duration_days }} days</td>
+                <td>
+                    <span class="badge badge-{{ membership.status }}">
+                        {{ membership.status|upper }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No membership history</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+    <a href="{% url 'membership_plans' %}" class="card" style="text-decoration: none; color: inherit; text-align: center;">
+        <i class="fas fa-tag" style="font-size: 3rem; color: var(--secondary-blue); margin-bottom: 1rem;"></i>
+        <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Browse Plans</h3>
+        <p style="color: var(--gray);">View available membership plans</p>
+    </a>
+
+    {% if current_membership %}
+    <div class="card" style="text-align: center;">
+        <i class="fas fa-crown" style="font-size: 3rem; color: var(--gold); margin-bottom: 1rem;"></i>
+        <h3 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Premium Member</h3>
+        <p style="color: var(--gray);">Enjoy full gym access</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Chatbot Widget -->
+{% include 'gym_app/includes/chatbot_widget.html' %}
+
+{% endblock %}

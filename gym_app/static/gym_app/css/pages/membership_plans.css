@@ -1,0 +1,114 @@
+ .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-header h1 {
+        font-size: 3rem;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .page-header p {
+        font-size: 1.25rem;
+        color: var(--gray);
+    }
+
+    .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .plan-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s;
+        border: 3px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .plan-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, var(--secondary-blue), var(--gold));
+    }
+
+    .plan-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border-color: var(--gold);
+    }
+
+    .plan-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        color: var(--gold);
+    }
+
+    .plan-name {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-bottom: 1rem;
+    }
+
+    .plan-price {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: var(--secondary-blue);
+        margin: 1.5rem 0;
+    }
+
+    .plan-price small {
+        font-size: 1rem;
+        color: var(--gray);
+        font-weight: 400;
+    }
+
+    .plan-duration {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        background-color: var(--light-bg);
+        border-radius: 25px;
+        color: var(--primary-blue);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .plan-description {
+        color: var(--gray);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+        min-height: 60px;
+    }
+
+    .current-plan-badge {
+        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        color: var(--white);
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 2rem;
+        }
+
+        .plans-grid {
+            grid-template-columns: 1fr;
+        }
+    }

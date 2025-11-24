@@ -1,0 +1,432 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Admin Dashboard - GymFit Pro{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/dashboard_admin.css' %}">
+{% block extra_css %}{% endblock %}
+
+
+<div class="dashboard-header">
+    <h1><i class="fas fa-chart-line"></i> Admin Dashboard</h1>
+    <p>Welcome back, {{ user.get_full_name }}! Here's your gym overview.</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ active_memberships }}</h3>
+            <p>Active Members</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon gold">
+            <i class="fas fa-user-friends"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ total_members }}</h3>
+            <p>Total Members</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-peso-sign"></i>
+        </div>
+        <div class="stat-info">
+            <h3>₱{{ today_revenue|floatformat:2 }}</h3>
+            <p>Today's Revenue</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon red">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-info">
+            <h3>₱{{ month_revenue|floatformat:2 }}</h3>
+            <p>This Month</p>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Payments - IMPORTANT -->
+<div class="table-container" style="border: 2px solid #f59e0b;">
+    <h2 class="section-title" style="color: #f59e0b;">
+        <i class="fas fa-exclamation-circle"></i>
+        Pending Payment Approvals
+        {% if pending_payments %}
+        <span class="badge badge-warning" style="margin-left: 1rem;">{{ pending_payments.count }} Pending</span>
+        {% endif %}
+    </h2>
+    {% if pending_payments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Reference No.</th>
+                <th>Member</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in pending_payments %}
+            <tr style="background: #fffbeb;">
+                <td><strong>{{ payment.reference_no }}</strong></td>
+                <td><strong>{{ payment.user.get_full_name }}</strong></td>
+                <td>{{ payment.membership.plan.name }}</td>
+                <td><strong>₱{{ payment.amount }}</strong></td>
+                <td><span class="badge badge-warning">{{ payment.method|upper }}</span></td>
+                <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'confirm_payment' payment.id %}" class="btn-action btn-success" title="Confirm Payment">
+                        <i class="fas fa-check"></i>
+                    </a>
+                    <a href="{% url 'reject_payment' payment.id %}" class="btn-action btn-danger" title="Reject Payment">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="text-align: center; margin-top: 1rem;">
+        <a href="{% url 'pending_payments' %}" class="btn-link">View All Pending Payments →</a>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-check-circle"></i>
+        <p>No pending payments to review</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- New Member Registrations -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-user-plus"></i>
+        Recent Member Registrations
+    </h2>
+    {% if new_members %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Joined</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in new_members %}
+            <tr>
+                <td><strong>{{ member.get_full_name }}</strong></td>
+                <td>{{ member.email }}</td>
+                <td>{{ member.mobile_no|default:"N/A" }}</td>
+                <td>{{ member.date_joined|date:"M d, Y" }}</td>
+                <td>
+                    {% if member.memberships.all %}
+                    <span class="badge badge-active">Has Membership</span>
+                    {% else %}
+                    <span class="badge badge-inactive">No Membership</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No new members recently</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Payments -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-money-bill-wave"></i>
+        Recent Member Payments (Confirmed)
+    </h2>
+    {% if recent_payments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Member</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in recent_payments %}
+            <tr>
+                <td><strong>{{ payment.user.get_full_name }}</strong></td>
+                <td>{{ payment.membership.plan.name }}</td>
+                <td><strong>₱{{ payment.amount }}</strong></td>
+                <td><span class="badge badge-active">{{ payment.method|upper }}</span></td>
+                <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No recent payments</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Walk-ins -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-walking"></i>
+        Recent Walk-in Sales
+    </h2>
+    {% if recent_walkins %}
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Pass Type</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for walkin in recent_walkins %}
+            <tr>
+                <td><strong>{{ walkin.customer_name|default:"Anonymous" }}</strong></td>
+                <td>{{ walkin.pass_type.name }}</td>
+                <td><strong>₱{{ walkin.amount }}</strong></td>
+                <td><span class="badge badge-active">{{ walkin.method|upper }}</span></td>
+                <td>{{ walkin.payment_date|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No recent walk-in sales</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Expiring Soon -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-exclamation-triangle"></i>
+        Memberships Expiring Soon (Next 7 Days)
+    </h2>
+    {% if expiring_soon %}
+    <table>
+        <thead>
+            <tr>
+                <th>Member</th>
+                <th>Plan</th>
+                <th>End Date</th>
+                <th>Days Left</th>
+                <th>Contact</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membership in expiring_soon %}
+            <tr>
+                <td><strong>{{ membership.user.get_full_name }}</strong></td>
+                <td>{{ membership.plan.name }}</td>
+                <td>{{ membership.end_date|date:"M d, Y" }}</td>
+                <td><span class="badge badge-warning">{{ membership.days_remaining }} days</span></td>
+                <td>{{ membership.user.mobile_no|default:"N/A" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-check-circle"></i>
+        <p>No memberships expiring soon</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Staff Activity -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-user-shield"></i>
+        Recent Staff Activity
+    </h2>
+    {% if recent_staff_activity %}
+    <table>
+        <thead>
+            <tr>
+                <th>Staff Member</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for activity in recent_staff_activity %}
+            <tr>
+                <td><strong>{{ activity.user.get_full_name }}</strong></td>
+                <td>{{ activity.action }}</td>
+                <td>{{ activity.details|truncatechars:50 }}</td>
+                <td>{{ activity.timestamp|date:"M d, Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="text-align: center; margin-top: 1rem;">
+        <a href="{% url 'audit_trail' %}" class="btn-link">View Full Audit Trail →</a>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No recent staff activity</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="stats-grid">
+    <a href="{% url 'pending_payments' %}" class="stat-card" style="text-decoration: none; color: inherit; border: 2px solid #f59e0b;">
+        <div class="stat-icon" style="background: #f59e0b;">
+            <i class="fas fa-tasks"></i>
+        </div>
+        <div class="stat-info">
+            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">Pending Payments</p>
+            {% if pending_payments %}
+            <span class="badge badge-warning" style="margin-top: 0.5rem;">{{ pending_payments.count }} pending</span>
+            {% endif %}
+        </div>
+    </a>
+
+    <a href="{% url 'walkin_purchase' %}" class="stat-card" style="text-decoration: none; color: inherit;">
+        <div class="stat-icon blue">
+            <i class="fas fa-cash-register"></i>
+        </div>
+        <div class="stat-info">
+            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">Process Walk-in</p>
+        </div>
+    </a>
+
+    <a href="{% url 'members_list' %}" class="stat-card" style="text-decoration: none; color: inherit;">
+        <div class="stat-icon gold">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">View Members</p>
+        </div>
+    </a>
+
+    <a href="{% url 'reports' %}" class="stat-card" style="text-decoration: none; color: inherit;">
+        <div class="stat-icon green">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="stat-info">
+            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">View Reports</p>
+        </div>
+    </a>
+
+    <a href="{% url 'attendance_report' %}" class="stat-card" style="text-decoration: none; color: inherit;">
+        <div class="stat-icon" style="background: #8b5cf6;">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <div class="stat-info">
+            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">Attendance</p>
+        </div>
+    </a>
+
+    <a href="/admin/" class="stat-card" style="text-decoration: none; color: inherit;">
+        <div class="stat-icon red">
+            <i class="fas fa-cog"></i>
+        </div>
+        <div class="stat-info">
+            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">System Admin</p>
+        </div>
+    </a>
+</div>
+
+<style>
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin: 0 0.25rem;
+    transition: all 0.2s;
+}
+
+.btn-action i {
+    font-size: 0.9rem;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+.btn-link {
+    color: var(--secondary-blue);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.btn-link:hover {
+    color: var(--primary-blue);
+    text-decoration: underline;
+}
+
+.badge-warning {
+    background: #f59e0b;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge-inactive {
+    background: #94a3b8;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+</style>
+
+{% endblock %}

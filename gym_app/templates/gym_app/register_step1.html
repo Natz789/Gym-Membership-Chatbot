@@ -1,0 +1,350 @@
+{% extends 'gym_app/base.html' %}
+{% load static %}
+
+{% block title %}Create Account - Step 1{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/register.css' %}">
+<style>
+.progress-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--light-gray);
+    z-index: 0;
+}
+
+.progress-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+}
+
+.step-circle.active {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+.step-circle.completed {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+.step-label {
+    font-size: 0.85rem;
+    color: var(--gray);
+    font-weight: 500;
+    text-align: center;
+}
+
+.step-label.active {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.registration-card {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.card-header h2 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.card-header p {
+    color: var(--gray);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--dark-gray);
+}
+
+.form-group label .required {
+    color: var(--danger);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+}
+
+.password-strength {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.strength-bar {
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.25rem;
+}
+
+.strength-fill {
+    height: 100%;
+    width: 0;
+    transition: all 0.3s;
+}
+
+.strength-weak { background: var(--danger); width: 33%; }
+.strength-medium { background: #f59e0b; width: 66%; }
+.strength-strong { background: var(--success); width: 100%; }
+
+.btn-primary {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+}
+
+.login-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--gray);
+}
+
+.login-link a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="progress-container">
+    <div class="progress-steps">
+        <div class="progress-step">
+            <div class="step-circle active">1</div>
+            <div class="step-label active">Account Info</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">2</div>
+            <div class="step-label">Personal Details</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">3</div>
+            <div class="step-label">Profile Photo</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">4</div>
+            <div class="step-label">Review</div>
+        </div>
+    </div>
+</div>
+
+<div class="registration-card">
+    <div class="card-header">
+        <h2><i class="fas fa-user-plus"></i> Create Your Account</h2>
+        <p>Step 1: Basic Account Information</p>
+    </div>
+
+    <form method="post" id="registrationForm">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="username">
+                Username <span class="required">*</span>
+            </label>
+            <input
+                type="text"
+                id="username"
+                name="username"
+                class="form-control"
+                required
+                pattern="[a-zA-Z0-9_]{3,20}"
+                title="Username must be 3-20 characters (letters, numbers, underscore only)"
+            >
+            <small style="color: var(--gray);">Choose a unique username (3-20 characters)</small>
+        </div>
+
+        <div class="form-group">
+            <label for="email">
+                Email Address <span class="required">*</span>
+            </label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control"
+                required
+            >
+            <small style="color: var(--gray);">We'll send your confirmation to this email</small>
+        </div>
+
+        <div class="form-group">
+            <label for="password">
+                Password <span class="required">*</span>
+            </label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-control"
+                required
+                minlength="8"
+            >
+            <div class="password-strength">
+                <div class="strength-bar">
+                    <div class="strength-fill" id="strengthFill"></div>
+                </div>
+                <small id="strengthText"></small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password_confirm">
+                Confirm Password <span class="required">*</span>
+            </label>
+            <input
+                type="password"
+                id="password_confirm"
+                name="password_confirm"
+                class="form-control"
+                required
+            >
+            <small id="passwordMatch"></small>
+        </div>
+
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-arrow-right"></i> Continue to Step 2
+        </button>
+    </form>
+
+    <div class="login-link">
+        Already have an account? <a href="{% url 'login' %}">Log in here</a>
+    </div>
+</div>
+
+<script>
+// Password strength indicator
+const password = document.getElementById('password');
+const strengthFill = document.getElementById('strengthFill');
+const strengthText = document.getElementById('strengthText');
+
+password.addEventListener('input', function() {
+    const value = this.value;
+    let strength = 0;
+
+    if (value.length >= 8) strength++;
+    if (value.match(/[a-z]/) && value.match(/[A-Z]/)) strength++;
+    if (value.match(/[0-9]/)) strength++;
+    if (value.match(/[^a-zA-Z0-9]/)) strength++;
+
+    strengthFill.className = 'strength-fill';
+    if (strength === 0) {
+        strengthFill.style.width = '0';
+        strengthText.textContent = '';
+    } else if (strength <= 2) {
+        strengthFill.classList.add('strength-weak');
+        strengthText.textContent = 'Weak password';
+        strengthText.style.color = 'var(--danger)';
+    } else if (strength === 3) {
+        strengthFill.classList.add('strength-medium');
+        strengthText.textContent = 'Medium password';
+        strengthText.style.color = '#f59e0b';
+    } else {
+        strengthFill.classList.add('strength-strong');
+        strengthText.textContent = 'Strong password';
+        strengthText.style.color = 'var(--success)';
+    }
+});
+
+// Password match indicator
+const passwordConfirm = document.getElementById('password_confirm');
+const passwordMatch = document.getElementById('passwordMatch');
+
+passwordConfirm.addEventListener('input', function() {
+    if (this.value === '') {
+        passwordMatch.textContent = '';
+        return;
+    }
+
+    if (this.value === password.value) {
+        passwordMatch.textContent = '✓ Passwords match';
+        passwordMatch.style.color = 'var(--success)';
+    } else {
+        passwordMatch.textContent = '✗ Passwords do not match';
+        passwordMatch.style.color = 'var(--danger)';
+    }
+});
+</script>
+{% endblock %}

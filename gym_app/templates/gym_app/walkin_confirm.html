@@ -1,0 +1,180 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Confirm Payment - GymFit Pro{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/walkin_confirm.css' %}">
+{% block extra_css %}{% endblock %}
+<div class="confirm-container">
+    <div class="confirm-card">
+        <div class="confirm-header">
+            <div class="confirm-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h1>Confirm Walk-in Payment</h1>
+            <p style="color: var(--gray);">Please review the transaction details before confirming</p>
+        </div>
+
+        <!-- Transaction Details -->
+        <div class="details-grid">
+            <div class="detail-row">
+                <span class="detail-label">
+                    <i class="fas fa-ticket-alt"></i> Pass Type
+                </span>
+                <span class="detail-value">{{ pending.pass_name }}</span>
+            </div>
+
+            {% if pending.customer_name %}
+            <div class="detail-row">
+                <span class="detail-label">
+                    <i class="fas fa-user"></i> Customer Name
+                </span>
+                <span class="detail-value">{{ pending.customer_name }}</span>
+            </div>
+            {% endif %}
+
+            {% if pending.mobile_no %}
+            <div class="detail-row">
+                <span class="detail-label">
+                    <i class="fas fa-phone"></i> Mobile Number
+                </span>
+                <span class="detail-value">{{ pending.mobile_no }}</span>
+            </div>
+            {% endif %}
+
+            <div class="detail-row">
+                <span class="detail-label">
+                    <i class="fas fa-credit-card"></i> Payment Method
+                </span>
+                <span class="detail-value">{{ pending.payment_method|upper }}</span>
+            </div>
+
+            {% if pending.reference_no %}
+            <div class="detail-row">
+                <span class="detail-label">
+                    <i class="fas fa-hashtag"></i> Reference Number
+                </span>
+                <span class="detail-value">{{ pending.reference_no }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Amount Display -->
+        <div class="amount-display">
+            <p style="margin: 0 0 0.5rem 0; font-size: 1.1rem; opacity: 0.9;">Total Amount</p>
+            <h2>₱{{ pending.amount }}</h2>
+        </div>
+
+        <!-- GCash QR Code Section -->
+        {% if pending.payment_method == 'gcash' %}
+        <div class="qr-section">
+            <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">
+                <i class="fas fa-qrcode"></i> Scan to Pay via GCash
+            </h3>
+
+            <div class="qr-code">
+                {% if qr_code_data %}
+                    <img src="{{ qr_code_data }}"
+                         alt="GCash QR Code"
+                         style="max-width: 100%; height: auto; border-radius: 10px;">
+                {% else %}
+                    {% load static %}
+                    <img src="{% static 'gym_app/images/gcash_qr.jpg' %}"
+                         alt="GCash QR Code"
+                         style="max-width: 100%; height: auto; border-radius: 10px;">
+                {% endif %}
+            </div>
+
+            <div class="gcash-info">
+                <h3>
+                    <i class="fab fa-google-wallet"></i> GCash Payment Details
+                </h3>
+                {% if gcash_merchant_info %}
+                    <p><strong>Account Name:</strong> {{ gcash_merchant_info.merchant_account }}</p>
+                    <p><strong>Account Number:</strong> {{ gcash_merchant_info.merchant_id }}</p>
+                {% else %}
+                    <p><strong>Account Name:</strong> GymFit Pro</p>
+                    <p><strong>Account Number:</strong> 09XX-XXX-XXXX</p>
+                {% endif %}
+                <p><strong>Amount:</strong> ₱{{ pending.amount }}</p>
+                <p><strong>Reference:</strong> {{ pending.reference_no }}</p>
+            </div>
+
+            <p style="color: var(--gray); margin-top: 1rem; font-size: 0.875rem;">
+                <i class="fas fa-info-circle"></i>
+                Scan the QR code using your GCash app to complete the payment
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Payment Instructions -->
+        {% if pending.payment_method == 'gcash' %}
+        <div class="payment-instructions">
+            <h3><i class="fas fa-clipboard-list"></i> Payment Instructions</h3>
+            <ol>
+                <li>Open your GCash mobile app</li>
+                <li>Tap on "Scan QR"</li>
+                <li>Scan the QR code displayed above</li>
+                <li>Verify the amount (₱{{ pending.amount }})</li>
+                <li>Complete the payment</li>
+                <li>Enter the reference number if provided</li>
+                <li>Click "Confirm Payment" below</li>
+            </ol>
+        </div>
+        {% elif pending.payment_method == 'card' %}
+        <div class="payment-instructions">
+            <h3><i class="fas fa-clipboard-list"></i> Payment Instructions</h3>
+            <ol>
+                <li>Insert or tap the customer's card</li>
+                <li>Enter the amount: ₱{{ pending.amount }}</li>
+                <li>Wait for payment approval</li>
+                <li>Get the transaction reference number</li>
+                <li>Click "Confirm Payment" below</li>
+            </ol>
+        </div>
+        {% else %}
+        <div class="payment-instructions">
+            <h3><i class="fas fa-clipboard-list"></i> Payment Instructions</h3>
+            <ol>
+                <li>Collect ₱{{ pending.amount }} in cash from the customer</li>
+                <li>Verify the amount received</li>
+                <li>Prepare change if needed</li>
+                <li>Click "Confirm Payment" below</li>
+                <li>Provide receipt to the customer</li>
+            </ol>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <form method="post" action="{% url 'walkin_confirm' %}">
+            {% csrf_token %}
+            <div class="button-group">
+                <button type="submit" name="action" value="confirm" class="btn btn-success btn-large">
+                    <i class="fas fa-check-circle"></i> Confirm Payment
+                </button>
+                <button type="submit" name="action" value="cancel" class="btn btn-danger btn-large">
+                    <i class="fas fa-times-circle"></i> Cancel Transaction
+                </button>
+            </div>
+        </form>
+
+        <p style="text-align: center; margin-top: 1.5rem; color: var(--gray); font-size: 0.875rem;">
+            <i class="fas fa-shield-alt"></i> 
+            All transactions are securely logged and monitored
+        </p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh QR code simulation (in production, generate actual QR)
+if (document.querySelector('.qr-placeholder')) {
+    // You can integrate a QR code library here
+    // Example: QRCode.js or generate server-side
+    console.log('QR Code would be generated here in production');
+}
+</script>
+{% endblock %}

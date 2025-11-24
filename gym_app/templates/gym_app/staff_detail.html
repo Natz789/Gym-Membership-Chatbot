@@ -1,0 +1,221 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Staff Detail - {{ staff_member.get_full_name }} - GymFit Pro{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/staff_management.css' %}">
+
+<!-- Breadcrumb Navigation -->
+<nav aria-label="Breadcrumb" class="breadcrumb-nav">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'members_list' %}">Team Management</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            {{ staff_member.get_full_name }}
+        </li>
+    </ol>
+</nav>
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-user-tie"></i> Staff Details</h1>
+    <div class="header-actions">
+        {% if user.is_admin %}
+        <a href="{% url 'edit_staff' staff_member.id %}" class="btn btn-warning" aria-label="Edit staff details">
+            <i class="fas fa-edit"></i> Edit Staff
+        </a>
+        {% endif %}
+        <a href="{% url 'members_list' %}" class="btn btn-secondary" aria-label="Back to team management">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<!-- Staff Information Card -->
+<div class="profile-card">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {% if staff_member.profile_image %}
+            <img
+                src="{{ staff_member.profile_image.url }}"
+                alt="Profile picture of {{ staff_member.get_full_name }}"
+            >
+            {% else %}
+            <div class="avatar-placeholder" role="img" aria-label="No profile picture">
+                <i class="fas fa-user-tie" aria-hidden="true"></i>
+            </div>
+            {% endif %}
+        </div>
+        <div class="profile-info">
+            <h2>{{ staff_member.get_full_name }}</h2>
+            <p class="profile-role">
+                <span class="badge badge-staff">
+                    <i class="fas fa-user-tie" aria-hidden="true"></i> {{ staff_member.role|upper }}
+                </span>
+            </p>
+            <p class="profile-joined">
+                <i class="fas fa-calendar" aria-hidden="true"></i>
+                Joined {{ staff_member.date_joined|date:"F d, Y" }}
+            </p>
+        </div>
+    </div>
+
+    <div class="profile-details">
+        <h3><i class="fas fa-info-circle"></i> Personal Information</h3>
+        <div class="details-grid">
+            <div class="detail-item">
+                <label class="detail-label">
+                    <i class="fas fa-user" aria-hidden="true"></i> Username
+                </label>
+                <span class="detail-value">{{ staff_member.username }}</span>
+            </div>
+            <div class="detail-item">
+                <label class="detail-label">
+                    <i class="fas fa-envelope" aria-hidden="true"></i> Email
+                </label>
+                <span class="detail-value">
+                    <a href="mailto:{{ staff_member.email }}">{{ staff_member.email }}</a>
+                </span>
+            </div>
+            <div class="detail-item">
+                <label class="detail-label">
+                    <i class="fas fa-phone" aria-hidden="true"></i> Mobile Number
+                </label>
+                <span class="detail-value">
+                    {% if staff_member.mobile_no %}
+                        <a href="tel:{{ staff_member.mobile_no }}">{{ staff_member.mobile_no }}</a>
+                    {% else %}
+                        Not provided
+                    {% endif %}
+                </span>
+            </div>
+            <div class="detail-item">
+                <label class="detail-label">
+                    <i class="fas fa-birthday-cake" aria-hidden="true"></i> Age
+                </label>
+                <span class="detail-value">{{ staff_member.age|default:"Not provided" }}</span>
+            </div>
+            <div class="detail-item">
+                <label class="detail-label">
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i> Birthdate
+                </label>
+                <span class="detail-value">{{ staff_member.birthdate|date:"F d, Y"|default:"Not provided" }}</span>
+            </div>
+            <div class="detail-item">
+                <label class="detail-label">
+                    <i class="fas fa-user-clock" aria-hidden="true"></i> Last Updated
+                </label>
+                <span class="detail-value">{{ staff_member.updated_at|date:"F d, Y - g:i A" }}</span>
+            </div>
+            <div class="detail-item full-width">
+                <label class="detail-label">
+                    <i class="fas fa-map-marker-alt" aria-hidden="true"></i> Address
+                </label>
+                <span class="detail-value">{{ staff_member.address|default:"Not provided" }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="activity-card">
+    <h3><i class="fas fa-history"></i> Recent Activity</h3>
+    {% if recent_activity %}
+    <div class="activity-timeline">
+        {% for activity in recent_activity %}
+        <div class="timeline-item">
+            <div class="timeline-marker {{ activity.severity }}">
+                {% if activity.severity == 'critical' %}
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                {% elif activity.severity == 'warning' %}
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                {% elif activity.severity == 'success' %}
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                {% else %}
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                {% endif %}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-header">
+                    <span class="timeline-action">{{ activity.action|title|default:"Activity" }}</span>
+                    <time class="timeline-time" datetime="{{ activity.timestamp|date:'c' }}">
+                        {{ activity.timestamp|date:"M d, Y - g:i A" }}
+                    </time>
+                </div>
+                <p class="timeline-description">{{ activity.description }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-inbox" aria-hidden="true"></i>
+        </div>
+        <p>No recent activity found.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;" aria-live="polite" aria-busy="false">
+    <div class="loading-spinner">
+        <div class="spinner" role="status"></div>
+        <p>Loading...</p>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toast notification system
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+
+    const iconMap = {
+        'success': 'check-circle',
+        'error': 'exclamation-circle',
+        'warning': 'exclamation-triangle',
+        'info': 'info-circle'
+    };
+
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="fas fa-${iconMap[type] || 'info-circle'}" aria-hidden="true"></i>
+        </div>
+        <div class="toast-message">${message}</div>
+        <button class="toast-close" onclick="this.parentElement.remove()" aria-label="Close notification">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    `;
+
+    document.getElementById('toastContainer').appendChild(toast);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// Show Django messages as toasts
+{% if messages %}
+{% for message in messages %}
+showToast("{{ message|escapejs }}", "{{ message.tags|default:'info' }}");
+{% endfor %}
+{% endif %}
+</script>
+{% endblock %}

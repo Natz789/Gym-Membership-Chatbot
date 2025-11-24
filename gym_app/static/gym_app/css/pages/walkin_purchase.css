@@ -1,0 +1,224 @@
+ .page-header {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+        color: var(--primary-blue);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .form-card {
+        background: var(--white);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--dark-gray);
+        font-weight: 500;
+    }
+
+    .form-group label i {
+        color: var(--secondary-blue);
+        margin-right: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--secondary-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .pass-options {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .pass-option {
+        position: relative;
+    }
+
+    .pass-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .pass-option label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .pass-option input[type="radio"]:checked + label {
+        border-color: var(--gold);
+        background-color: rgba(251, 191, 36, 0.1);
+    }
+
+    .pass-info h4 {
+        color: var(--primary-blue);
+        margin: 0 0 0.25rem 0;
+        font-size: 1.1rem;
+    }
+
+    .pass-info p {
+        color: var(--gray);
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .pass-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .payment-option {
+        position: relative;
+    }
+
+    .payment-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .payment-option label {
+        display: block;
+        padding: 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .payment-option input[type="radio"]:checked + label {
+        border-color: var(--secondary-blue);
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .payment-option label i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--secondary-blue);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 1.25rem;
+        font-size: 1.2rem;
+    }
+
+    .recent-sales {
+        background: var(--white);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table thead {
+        background-color: var(--light-bg);
+    }
+
+    table th {
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--primary-blue);
+        border-bottom: 2px solid #e2e8f0;
+        font-size: 0.875rem;
+    }
+
+    table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+        color: var(--dark-gray);
+        font-size: 0.875rem;
+    }
+
+    table tbody tr:hover {
+        background-color: var(--light-bg);
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-active {
+        background-color: #d1fae5;
+        color: var(--success);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--gray);
+    }
+
+    @media (max-width: 1024px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .payment-methods {
+            grid-template-columns: 1fr;
+        }
+    }

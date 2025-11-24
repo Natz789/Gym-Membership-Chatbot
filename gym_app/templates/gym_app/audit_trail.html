@@ -1,0 +1,196 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Audit Trail - GymFit Pro{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/audit_trail.css' %}">
+{% block extra_css %}{% endblock %}
+
+
+<div class="page-header">
+    <h1><i class="fas fa-history"></i> Audit Trail</h1>
+    <p>Complete log of all system activities and transactions</p>
+</div>
+
+<!-- Filters -->
+<div class="filters-box">
+    <form method="get" action="{% url 'audit_trail' %}" class="filters-form">
+        <div class="filter-group">
+            <label for="action"><i class="fas fa-filter"></i> Action</label>
+            <select name="action" id="action" class="filter-control">
+                <option value="">All Actions</option>
+                {% for action_code, action_name in actions %}
+                <option value="{{ action_code }}" {% if action_filter == action_code %}selected{% endif %}>
+                    {{ action_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="severity"><i class="fas fa-exclamation-triangle"></i> Severity</label>
+            <select name="severity" id="severity" class="filter-control">
+                <option value="">All Severities</option>
+                <option value="info" {% if severity_filter == 'info' %}selected{% endif %}>Info</option>
+                <option value="warning" {% if severity_filter == 'warning' %}selected{% endif %}>Warning</option>
+                <option value="error" {% if severity_filter == 'error' %}selected{% endif %}>Error</option>
+                <option value="critical" {% if severity_filter == 'critical' %}selected{% endif %}>Critical</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="user"><i class="fas fa-user"></i> Username</label>
+            <input 
+                type="text" 
+                name="user" 
+                id="user" 
+                class="filter-control" 
+                placeholder="Search username"
+                value="{{ user_filter }}"
+            >
+        </div>
+
+        <div class="filter-group">
+            <label for="days"><i class="fas fa-calendar-alt"></i> Time Period</label>
+            <select name="days" id="days" class="filter-control">
+                <option value="1" {% if days_filter == '1' %}selected{% endif %}>Last 24 hours</option>
+                <option value="7" {% if days_filter == '7' %}selected{% endif %}>Last 7 days</option>
+                <option value="30" {% if days_filter == '30' %}selected{% endif %}>Last 30 days</option>
+                <option value="90" {% if days_filter == '90' %}selected{% endif %}>Last 90 days</option>
+                <option value="">All time</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-search"></i> Filter
+            </button>
+        </div>
+
+        <div class="filter-group">
+            <a href="{% url 'audit_trail' %}" class="btn btn-gold" style="width: 100%; text-align: center; text-decoration: none;">
+                <i class="fas fa-times"></i> Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Audit Logs Table -->
+<div class="table-container">
+    {% if page_obj %}
+    <p style="color: var(--gray); margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i> 
+        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} log{{ page_obj.paginator.count|pluralize }}
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Severity</th>
+                <th>Description</th>
+                <th>IP Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in page_obj %}
+            <tr>
+                <td style="white-space: nowrap;">
+                    <i class="fas fa-clock action-icon" style="color: var(--gray);"></i>
+                    {{ log.timestamp|date:"M d, Y" }}<br>
+                    <small style="color: var(--gray);">{{ log.timestamp|date:"h:i A" }}</small>
+                </td>
+                <td>
+                    {% if log.user %}
+                        <strong>{{ log.user.username }}</strong><br>
+                        <small style="color: var(--gray);">{{ log.user.get_full_name }}</small>
+                    {% else %}
+                        <em style="color: var(--gray);">Anonymous</em>
+                    {% endif %}
+                </td>
+                <td>
+                    <i class="fas fa-{% if 'login' in log.action %}sign-in-alt{% elif 'logout' in log.action %}sign-out-alt{% elif 'payment' in log.action or 'sale' in log.action %}money-bill-wave{% elif 'membership' in log.action %}id-card{% elif 'user' in log.action %}user{% else %}clipboard-list{% endif %} action-icon" 
+                       style="color: var(--secondary-blue);"></i>
+                    {{ log.get_action_display }}
+                </td>
+                <td>
+                    <span class="badge badge-{{ log.severity }}">
+                        {{ log.severity|upper }}
+                    </span>
+                </td>
+                <td>{{ log.description }}</td>
+                <td>
+                    {% if log.ip_address %}
+                        <i class="fas fa-network-wired action-icon" style="color: var(--gray);"></i>
+                        {{ log.ip_address }}
+                    {% else %}
+                        <em style="color: var(--gray);">N/A</em>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if days_filter %}&days={{ days_filter }}{% endif %}">
+            <i class="fas fa-angle-double-left"></i>
+        </a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if days_filter %}&days={{ days_filter }}{% endif %}">
+            <i class="fas fa-angle-left"></i>
+        </a>
+        {% endif %}
+
+        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if days_filter %}&days={{ days_filter }}{% endif %}">
+            <i class="fas fa-angle-right"></i>
+        </a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if days_filter %}&days={{ days_filter }}{% endif %}">
+            <i class="fas fa-angle-double-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-clipboard-list"></i>
+        <h2 style="color: var(--primary-blue);">No Audit Logs Found</h2>
+        <p>No activities match your filter criteria</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Legend -->
+<div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; margin-top: 2rem;">
+    <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i> Severity Levels
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+            <span class="badge badge-info">INFO</span>
+            <p style="color: var(--gray); font-size: 0.875rem; margin-top: 0.5rem;">Normal system operations</p>
+        </div>
+        <div>
+            <span class="badge badge-warning">WARNING</span>
+            <p style="color: var(--gray); font-size: 0.875rem; margin-top: 0.5rem;">Unusual activity, review needed</p>
+        </div>
+        <div>
+            <span class="badge badge-error">ERROR</span>
+            <p style="color: var(--gray); font-size: 0.875rem; margin-top: 0.5rem;">Failed operations or errors</p>
+        </div>
+        <div>
+            <span class="badge badge-critical">CRITICAL</span>
+            <p style="color: var(--gray); font-size: 0.875rem; margin-top: 0.5rem;">Security issues, immediate attention required</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

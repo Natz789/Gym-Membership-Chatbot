@@ -1,0 +1,196 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Attendance Report - Rhose Gym{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/audit_trail.css' %}">
+
+<div class="page-header">
+    <h1><i class="fas fa-clipboard-list"></i> Attendance Report</h1>
+    <p>Track member check-ins and check-outs</p>
+</div>
+
+<!-- Stats Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div style="background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="font-size: 3rem; color: var(--success);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 2rem; font-weight: 700; color: var(--primary-blue); margin: 0;">{{ currently_checked_in }}</h3>
+                <p style="color: var(--gray); margin: 0; font-weight: 500;">Currently In Gym</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="font-size: 3rem; color: var(--secondary-blue);">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 2rem; font-weight: 700; color: var(--primary-blue); margin: 0;">{{ today_checkins }}</h3>
+                <p style="color: var(--gray); margin: 0; font-weight: 500;">Total Check-ins Today</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-box">
+    <form method="get" action="{% url 'attendance_report' %}" class="filters-form">
+        <div class="filter-group">
+            <label for="date"><i class="fas fa-calendar"></i> Date</label>
+            <input 
+                type="date" 
+                name="date" 
+                id="date" 
+                class="filter-control" 
+                value="{{ date_filter }}"
+            >
+        </div>
+
+        <div class="filter-group">
+            <label for="user"><i class="fas fa-user"></i> Member Name</label>
+            <input 
+                type="text" 
+                name="user" 
+                id="user" 
+                class="filter-control" 
+                placeholder="Search member"
+                value="{{ user_filter }}"
+            >
+        </div>
+
+        <div class="filter-group">
+            <label for="status"><i class="fas fa-filter"></i> Status</label>
+            <select name="status" id="status" class="filter-control">
+                <option value="">All Status</option>
+                <option value="in" {% if status_filter == 'in' %}selected{% endif %}>Currently In</option>
+                <option value="out" {% if status_filter == 'out' %}selected{% endif %}>Checked Out</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-search"></i> Filter
+            </button>
+        </div>
+
+        <div class="filter-group">
+            <a href="{% url 'attendance_report' %}" class="btn btn-gold" style="width: 100%; text-align: center; text-decoration: none;">
+                <i class="fas fa-times"></i> Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Attendance Table -->
+<div class="table-container">
+    {% if page_obj %}
+    <p style="color: var(--gray); margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i> 
+        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} record{{ page_obj.paginator.count|pluralize }}
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Member</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attendance in page_obj %}
+            <tr>
+                <td>
+                    <strong>{{ attendance.user.get_full_name }}</strong><br>
+                    <small style="color: var(--gray);">@{{ attendance.user.username }}</small>
+                </td>
+                <td>
+                    <i class="fas fa-clock action-icon" style="color: var(--success);"></i>
+                    {{ attendance.check_in|date:"M d, Y" }}<br>
+                    <small style="color: var(--gray);">{{ attendance.check_in|date:"h:i A" }}</small>
+                </td>
+                <td>
+                    {% if attendance.check_out %}
+                        <i class="fas fa-clock action-icon" style="color: var(--danger);"></i>
+                        {{ attendance.check_out|date:"M d, Y" }}<br>
+                        <small style="color: var(--gray);">{{ attendance.check_out|date:"h:i A" }}</small>
+                    {% else %}
+                        <em style="color: var(--gray);">Still in gym</em>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ attendance.get_duration_display }}</strong>
+                </td>
+                <td>
+                    {% if attendance.is_checked_in %}
+                        <span class="badge badge-info">
+                            🟢 IN GYM
+                        </span>
+                    {% else %}
+                        <span class="badge badge-error">
+                            🔴 CHECKED OUT
+                        </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if date_filter %}&date={{ date_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+            <i class="fas fa-angle-double-left"></i>
+        </a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+            <i class="fas fa-angle-left"></i>
+        </a>
+        {% endif %}
+
+        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+            <i class="fas fa-angle-right"></i>
+        </a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+            <i class="fas fa-angle-double-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-clipboard-list"></i>
+        <h2 style="color: var(--primary-blue);">No Attendance Records Found</h2>
+        <p>No records match your filter criteria</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; margin-top: 2rem;">
+    <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">
+        <i class="fas fa-link"></i> Quick Links
+    </h3>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'kiosk_login' %}" target="_blank" class="btn btn-gold" style="text-decoration: none;">
+            <i class="fas fa-fingerprint"></i> Open Kiosk
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+    </div>
+</div>
+
+{% endblock %}

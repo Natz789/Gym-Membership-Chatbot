@@ -1,0 +1,171 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}{{ member.get_full_name }} - Member Details{% endblock %}
+
+{% block content %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/member_detail.css' %}">
+{% block extra_css %}{% endblock %}
+
+<a href="{% url 'members_list' %}" class="back-link">
+    <i class="fas fa-arrow-left"></i> Back to Members List
+</a>
+
+<!-- Member Header -->
+<div class="member-header">
+    <div class="member-avatar">
+        {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
+    </div>
+    <div class="member-info">
+        <h1>{{ member.get_full_name }}</h1>
+        <p style="opacity: 0.9; margin: 0;">
+            <i class="fas fa-at"></i> {{ member.username }} | 
+            <i class="fas fa-envelope"></i> {{ member.email }}
+        </p>
+        <p style="opacity: 0.9; margin: 0.5rem 0 0 0;">
+            <i class="fas fa-calendar-alt"></i> Member since {{ member.date_joined|date:"M d, Y" }}
+        </p>
+    </div>
+</div>
+
+<!-- Member Information -->
+<div class="info-grid">
+    <div class="info-card">
+        <h2 class="card-title">
+            <i class="fas fa-user-circle"></i>
+            Personal Information
+        </h2>
+        <div class="info-row">
+            <span class="info-label">Full Name</span>
+            <span class="info-value">{{ member.get_full_name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Username</span>
+            <span class="info-value">{{ member.username }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ member.email }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Mobile</span>
+            <span class="info-value">{{ member.mobile_no|default:"N/A" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Birthdate</span>
+            <span class="info-value">{{ member.birthdate|date:"M d, Y"|default:"N/A" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Age</span>
+            <span class="info-value">{{ member.age|default:"N/A" }}</span>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <h2 class="card-title">
+            <i class="fas fa-map-marker-alt"></i>
+            Contact Information
+        </h2>
+        <div class="info-row">
+            <span class="info-label">Address</span>
+            <span class="info-value">{{ member.address|default:"N/A" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Role</span>
+            <span class="info-value">
+                <span class="badge badge-active">{{ member.role|upper }}</span>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Active</span>
+            <span class="info-value">
+                {% if member.is_active %}
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i> Yes
+                {% else %}
+                    <i class="fas fa-times-circle" style="color: var(--danger);"></i> No
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Memberships -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-id-card"></i>
+        Membership History
+    </h2>
+    {% if memberships %}
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membership in memberships %}
+            <tr>
+                <td><strong>{{ membership.plan.name }}</strong></td>
+                <td>{{ membership.start_date|date:"M d, Y" }}</td>
+                <td>{{ membership.end_date|date:"M d, Y" }}</td>
+                <td>{{ membership.plan.duration_days }} days</td>
+                <td>
+                    <span class="badge badge-{{ membership.status }}">
+                        {{ membership.status|upper }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-id-card"></i>
+        <p>No membership history</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Payment History -->
+<div class="table-container">
+    <h2 class="section-title">
+        <i class="fas fa-money-bill-wave"></i>
+        Payment History
+    </h2>
+    {% if payments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td><strong>{{ payment.membership.plan.name }}</strong></td>
+                <td><strong>₱{{ payment.amount }}</strong></td>
+                <td><span class="badge badge-active">{{ payment.method|upper }}</span></td>
+                <td>{{ payment.reference_no|default:"N/A" }}</td>
+                <td>{{ payment.payment_date|date:"M d, Y h:i A" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-receipt"></i>
+        <p>No payment history</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

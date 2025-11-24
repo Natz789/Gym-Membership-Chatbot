@@ -1,0 +1,203 @@
+{% extends 'gym_app/base.html' %}
+
+{% block title %}Register - GymFit Pro{% endblock %}
+
+{% block content %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/register.css' %}">
+{% block extra_css %}{% endblock %}
+
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h2>Join GymFit Pro</h2>
+            <p>Create your account and start your fitness journey</p>
+        </div>
+
+        <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">
+                        <i class="fas fa-user"></i> First Name <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="first_name" 
+                        name="first_name" 
+                        class="form-control" 
+                        placeholder="John" 
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name">
+                        <i class="fas fa-user"></i> Last Name <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="last_name" 
+                        name="last_name" 
+                        class="form-control" 
+                        placeholder="Doe" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="username">
+                    <i class="fas fa-at"></i> Username <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    class="form-control" 
+                    placeholder="johndoe123" 
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">
+                    <i class="fas fa-envelope"></i> Email <span class="required">*</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-control" 
+                    placeholder="john.doe@example.com" 
+                    required
+                >
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Password <span class="required">*</span>
+                    </label>
+                    <div class="password-toggle">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-control" 
+                            placeholder="Enter password" 
+                            required
+                        >
+                        <i class="fas fa-eye password-toggle-icon" onclick="togglePassword('password')"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password_confirm">
+                        <i class="fas fa-lock"></i> Confirm Password <span class="required">*</span>
+                    </label>
+                    <div class="password-toggle">
+                        <input 
+                            type="password" 
+                            id="password_confirm" 
+                            name="password_confirm" 
+                            class="form-control" 
+                            placeholder="Re-enter password" 
+                            required
+                        >
+                        <i class="fas fa-eye password-toggle-icon" onclick="togglePassword('password_confirm')"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="mobile_no">
+                        <i class="fas fa-phone"></i> Mobile Number
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="mobile_no" 
+                        name="mobile_no" 
+                        class="form-control" 
+                        placeholder="09123456789"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="birthdate">
+                        <i class="fas fa-birthday-cake"></i> Birthdate
+                    </label>
+                    <input 
+                        type="date" 
+                        id="birthdate" 
+                        name="birthdate" 
+                        class="form-control"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">
+                    <i class="fas fa-map-marker-alt"></i> Address
+                </label>
+                <textarea 
+                    id="address" 
+                    name="address" 
+                    class="form-control" 
+                    placeholder="Enter your complete address"
+                ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-gold btn-submit">
+                <i class="fas fa-rocket"></i> Create Account
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? 
+                <a href="{% url 'login' %}">
+                    <i class="fas fa-sign-in-alt"></i> Login Here
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId) {
+    const passwordInput = document.getElementById(fieldId);
+    const toggleIcon = passwordInput.nextElementSibling;
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
+// Password match validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('password_confirm').value;
+    
+    if (password !== passwordConfirm) {
+        e.preventDefault();
+        alert('Passwords do not match!');
+    }
+});
+</script>
+{% endblock %}

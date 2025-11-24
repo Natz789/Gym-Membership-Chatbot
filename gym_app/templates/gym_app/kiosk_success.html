@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success - Gym Kiosk</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e3a8a;
+            --secondary-blue: #3b82f6;
+            --gold: #fbbf24;
+            --success: #10b981;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .success-container {
+            background: var(--white);
+            border-radius: 30px;
+            padding: 4rem;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: zoomIn 0.5s ease-out;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-icon {
+            font-size: 8rem;
+            color: var(--success);
+            margin-bottom: 2rem;
+            animation: bounce 1s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .user-greeting {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .user-greeting h2 {
+            color: var(--primary-blue);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-greeting .username {
+            color: #64748b;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .time-display {
+            font-size: 2rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .info-box p {
+            color: var(--primary-blue);
+            font-size: 1.3rem;
+            margin: 0.75rem 0;
+            font-weight: 500;
+        }
+
+        .duration-display {
+            background: var(--gold);
+            color: var(--primary-blue);
+            padding: 1.5rem;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 2rem 0;
+        }
+
+        .countdown {
+            color: #64748b;
+            font-size: 1.2rem;
+            margin-top: 2rem;
+            font-weight: 500;
+        }
+
+        .countdown-number {
+            display: inline-block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            min-width: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="user-greeting">
+            <h2>{{ user.first_name|title }}!</h2>
+            <div class="username">@{{ user.username }}</div>
+        </div>
+
+        {% if action == 'checkin' %}
+        <div class="success-icon">
+            <i class="fas fa-sign-in-alt"></i>
+        </div>
+        <h1>Welcome!</h1>
+        <div class="time-display">
+            <i class="fas fa-clock"></i> {{ now|date:"h:i A" }}
+        </div>
+        <div class="info-box">
+            <p><i class="fas fa-check-circle"></i> Successfully Checked In</p>
+            <p><i class="fas fa-dumbbell"></i> Enjoy your workout!</p>
+            <p><i class="fas fa-fire"></i> Let's crush those goals!</p>
+        </div>
+        {% else %}
+        <div class="success-icon">
+            <i class="fas fa-sign-out-alt"></i>
+        </div>
+        <h1>Great Job!</h1>
+        <div class="time-display">
+            <i class="fas fa-clock"></i> {{ now|date:"h:i A" }}
+        </div>
+        <div class="info-box">
+            <p><i class="fas fa-check-circle"></i> Successfully Checked Out</p>
+            <p><i class="fas fa-heart"></i> Awesome workout session!</p>
+        </div>
+        {% if duration > 0 %}
+        <div class="duration-display">
+            <i class="fas fa-stopwatch"></i> Session Duration: 
+            {% if duration >= 60 %}
+                {{ duration|floatformat:0|add:"0" }}
+                {% widthratio duration 60 1 %}h 
+                {% widthratio duration 1 1 %}
+                {{ duration|add:"0" }}m
+            {% else %}
+                {{ duration }} minutes
+            {% endif %}
+        </div>
+        {% endif %}
+        <div class="info-box" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+            <p><i class="fas fa-water"></i> Don't forget to hydrate!</p>
+            <p><i class="fas fa-utensils"></i> Eat well & rest up!</p>
+        </div>
+        {% endif %}
+
+        <div class="countdown">
+            <i class="fas fa-redo"></i> Returning to kiosk in 
+            <span class="countdown-number" id="countdown">5</span> seconds...
+        </div>
+    </div>
+
+    <script>
+        // Countdown and redirect
+        let seconds = 5;
+        const countdownElement = document.getElementById('countdown');
+        
+        const interval = setInterval(function() {
+            seconds--;
+            countdownElement.textContent = seconds;
+            
+            if (seconds <= 0) {
+                clearInterval(interval);
+                window.location.href = "{% url 'kiosk_login' %}";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

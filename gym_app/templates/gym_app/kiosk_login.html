@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Kiosk - Check In/Out</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e3a8a;
+            --secondary-blue: #3b82f6;
+            --gold: #fbbf24;
+            --dark-gold: #f59e0b;
+            --light-bg: #f8fafc;
+            --white: #ffffff;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            height: 100vh;
+            max-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(0.5rem, 2vw, 2rem);
+            overflow: hidden;
+        }
+
+        .kiosk-container {
+            background: var(--white);
+            border-radius: clamp(15px, 3vw, 30px);
+            padding: clamp(1.5rem, 4vw, 4rem);
+            max-width: 700px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            /* Smooth scrolling on overflow */
+            scrollbar-width: thin;
+            scrollbar-color: var(--gold) var(--light-bg);
+        }
+
+        .kiosk-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .kiosk-container::-webkit-scrollbar-track {
+            background: var(--light-bg);
+            border-radius: 10px;
+        }
+
+        .kiosk-container::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 10px;
+        }
+
+        .kiosk-header {
+            text-align: center;
+            margin-bottom: clamp(1.5rem, 3vh, 3rem);
+        }
+
+        .kiosk-icon {
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: var(--gold);
+            margin-bottom: clamp(0.75rem, 2vh, 1.5rem);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .kiosk-header h1 {
+            color: var(--primary-blue);
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .kiosk-header p {
+            color: #64748b;
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+        }
+
+        .pin-instruction {
+            background: linear-gradient(135deg, var(--light-bg) 0%, #dbeafe 100%);
+            padding: clamp(1rem, 2vw, 1.5rem);
+            border-radius: clamp(10px, 2vw, 15px);
+            margin-bottom: clamp(1rem, 2vh, 2rem);
+            text-align: center;
+        }
+
+        .pin-instruction h3 {
+            color: var(--primary-blue);
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .pin-instruction p {
+            color: #64748b;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+        }
+
+        .pin-input-container {
+            margin-bottom: clamp(1rem, 2vh, 2rem);
+        }
+
+        .pin-input-label {
+            text-align: center;
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: clamp(0.75rem, 2vh, 1.5rem);
+        }
+
+        .pin-display {
+            display: flex;
+            justify-content: center;
+            gap: clamp(0.5rem, 1.5vw, 1rem);
+            margin-bottom: clamp(1rem, 2vh, 2rem);
+            flex-wrap: wrap;
+        }
+
+        .pin-digit {
+            width: clamp(45px, 9vw, 70px);
+            height: clamp(50px, 10vh, 80px);
+            border: 3px solid #e2e8f0;
+            border-radius: clamp(10px, 2vw, 15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            color: var(--primary-blue);
+            background: var(--white);
+            transition: all 0.3s;
+        }
+
+        .pin-digit.filled {
+            border-color: var(--secondary-blue);
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        }
+
+        .pin-digit.error {
+            border-color: var(--danger);
+            background: #fee2e2;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(0.5rem, 1.5vw, 1rem);
+            margin-bottom: clamp(1rem, 2vh, 2rem);
+        }
+
+        .numpad-btn {
+            height: clamp(50px, 10vh, 80px);
+            border: none;
+            border-radius: clamp(10px, 2vw, 15px);
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--light-bg);
+            color: var(--primary-blue);
+            padding: clamp(0.5rem, 1vw, 1rem);
+        }
+
+        .numpad-btn:hover {
+            background: var(--secondary-blue);
+            color: var(--white);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .numpad-btn:active {
+            transform: translateY(0);
+        }
+
+        .numpad-btn.clear {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .numpad-btn.clear:hover {
+            background: #dc2626;
+        }
+
+        .numpad-btn.submit {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+            color: var(--primary-blue);
+            grid-column: span 3;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+        }
+
+        .numpad-btn.submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4);
+        }
+
+        .numpad-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .back-link a {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .back-link a:hover {
+            color: var(--primary-blue);
+        }
+
+        #pinInput {
+            position: absolute;
+            left: -9999px;
+        }
+
+        /* Media Queries for Extra Small Screens */
+        @media (max-width: 480px) {
+            .kiosk-container {
+                padding: 1rem;
+                border-radius: 15px;
+            }
+
+            .kiosk-header {
+                margin-bottom: 1rem;
+            }
+
+            .kiosk-icon {
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .kiosk-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .kiosk-header p {
+                font-size: 0.9rem;
+            }
+
+            .pin-digit {
+                width: 40px;
+                height: 45px;
+                font-size: 1.3rem;
+                border: 2px solid #e2e8f0;
+            }
+
+            .numpad-btn {
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .numpad-btn.submit {
+                font-size: 1rem;
+            }
+
+            .pin-instruction {
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .pin-instruction h3 {
+                font-size: 0.95rem;
+            }
+
+            .pin-instruction p {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Media Queries for Very Small Height (Landscape phones) */
+        @media (max-height: 600px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .kiosk-container {
+                padding: 1rem;
+                max-height: 98vh;
+            }
+
+            .kiosk-header {
+                margin-bottom: 0.75rem;
+            }
+
+            .kiosk-icon {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .kiosk-header h1 {
+                font-size: 1.3rem;
+                margin-bottom: 0.25rem;
+            }
+
+            .kiosk-header p {
+                font-size: 0.85rem;
+            }
+
+            .pin-instruction {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .pin-digit {
+                height: 45px;
+            }
+
+            .numpad-btn {
+                height: 45px;
+            }
+
+            .pin-display, .pin-input-container, .numpad {
+                margin-bottom: 0.75rem;
+            }
+
+            .back-link {
+                margin-top: 1rem;
+            }
+        }
+
+        /* Accessibility: Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            .kiosk-icon {
+                animation: none;
+            }
+
+            .numpad-btn:hover,
+            .numpad-btn.submit:hover {
+                transform: none;
+            }
+
+            .alert {
+                animation: none;
+            }
+
+            .pin-digit.error {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="kiosk-container">
+        <div class="kiosk-header">
+            <div class="kiosk-icon">
+                <i class="fas fa-fingerprint"></i>
+            </div>
+            <h1>Rhose Gym Kiosk</h1>
+            <p>Quick Check In / Check Out</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas fa-exclamation-circle" style="font-size: 1.5rem;"></i>
+            <span style="font-size: 1.1rem;">{{ message }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="pin-instruction">
+            <h3><i class="fas fa-key"></i> Enter Your 6-Digit PIN</h3>
+            <p>Use the number pad below to enter your kiosk PIN</p>
+        </div>
+
+        <form method="post" action="{% url 'kiosk_login' %}" id="pinForm">
+            {% csrf_token %}
+            
+            <input type="hidden" name="kiosk_pin" id="pinInput" value="">
+            
+            <div class="pin-input-container">
+                <div class="pin-input-label">
+                    <i class="fas fa-lock"></i> Your PIN
+                </div>
+                
+                <div class="pin-display" id="pinDisplay">
+                    <div class="pin-digit" data-index="0">•</div>
+                    <div class="pin-digit" data-index="1">•</div>
+                    <div class="pin-digit" data-index="2">•</div>
+                    <div class="pin-digit" data-index="3">•</div>
+                    <div class="pin-digit" data-index="4">•</div>
+                    <div class="pin-digit" data-index="5">•</div>
+                </div>
+            </div>
+
+            <div class="numpad">
+                <button type="button" class="numpad-btn" onclick="addDigit('1')">1</button>
+                <button type="button" class="numpad-btn" onclick="addDigit('2')">2</button>
+                <button type="button" class="numpad-btn" onclick="addDigit('3')">3</button>
+                <button type="button" class="numpad-btn" onclick="addDigit('4')">4</button>
+                <button type="button" class="numpad-btn" onclick="addDigit('5')">5</button>
+                <button type="button" class="numpad-btn" onclick="addDigit('6')">6</button>
+                <button type="button" class="numpad-btn" onclick="addDigit('7')">7</button>
+                <button type="button" class="numpad-btn" onclick="addDigit('8')">8</button>
+                <button type="button" class="numpad-btn" onclick="addDigit('9')">9</button>
+                <button type="button" class="numpad-btn clear" onclick="clearPin()">
+                    <i class="fas fa-backspace"></i>
+                </button>
+                <button type="button" class="numpad-btn" onclick="addDigit('0')">0</button>
+                <button type="button" class="numpad-btn clear" onclick="clearAllPin()">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+                <button type="submit" class="numpad-btn submit" id="submitBtn" disabled>
+                    <i class="fas fa-check-circle"></i> Check In / Out
+                </button>
+            </div>
+        </form>
+
+        <div class="back-link">
+            <a href="{% url 'home' %}">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let pin = '';
+        const pinInput = document.getElementById('pinInput');
+        const pinDigits = document.querySelectorAll('.pin-digit');
+        const submitBtn = document.getElementById('submitBtn');
+        const pinForm = document.getElementById('pinForm');
+
+        function updateDisplay() {
+            pinDigits.forEach((digit, index) => {
+                if (index < pin.length) {
+                    digit.textContent = pin[index];
+                    digit.classList.add('filled');
+                } else {
+                    digit.textContent = '•';
+                    digit.classList.remove('filled');
+                }
+                digit.classList.remove('error');
+            });
+
+            pinInput.value = pin;
+            submitBtn.disabled = pin.length !== 6;
+        }
+
+        function addDigit(digit) {
+            if (pin.length < 6) {
+                pin += digit;
+                updateDisplay();
+                
+                // Auto-submit when 6 digits are entered
+                if (pin.length === 6) {
+                    setTimeout(() => {
+                        pinForm.submit();
+                    }, 300);
+                }
+            }
+        }
+
+        function clearPin() {
+            if (pin.length > 0) {
+                pin = pin.slice(0, -1);
+                updateDisplay();
+            }
+        }
+
+        function clearAllPin() {
+            pin = '';
+            updateDisplay();
+        }
+
+        function showError() {
+            pinDigits.forEach(digit => {
+                digit.classList.add('error');
+            });
+            
+            setTimeout(() => {
+                clearAllPin();
+            }, 500);
+        }
+
+        // Show error animation if there's an error message
+        {% if messages %}
+        showError();
+        {% endif %}
+
+        // Keyboard support
+        document.addEventListener('keydown', function(e) {
+            if (e.key >= '0' && e.key <= '9') {
+                addDigit(e.key);
+            } else if (e.key === 'Backspace') {
+                e.preventDefault();
+                clearPin();
+            } else if (e.key === 'Escape') {
+                clearAllPin();
+            } else if (e.key === 'Enter' && pin.length === 6) {
+                e.preventDefault();
+                pinForm.submit();
+            }
+        });
+
+        // Auto-clear after 2 minutes of inactivity
+        let inactivityTimeout;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimeout);
+            inactivityTimeout = setTimeout(() => {
+                clearAllPin();
+            }, 120000); // 2 minutes
+        }
+
+        document.addEventListener('click', resetInactivityTimer);
+        document.addEventListener('keypress', resetInactivityTimer);
+        resetInactivityTimer();
+    </script>
+</body>
+</html>

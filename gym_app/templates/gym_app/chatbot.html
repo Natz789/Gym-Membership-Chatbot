@@ -1,0 +1,690 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}AI Assistant - Rhose Gym{% endblock %}
+
+{% block page_title %}FitBot - AI Assistant{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chatbot-container {
+        max-width: 900px;
+        margin: 0 auto;
+        height: calc(100vh - 200px);
+        display: flex;
+        flex-direction: column;
+        background: var(--white);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .chat-header {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+        color: var(--white);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        justify-content: space-between;
+    }
+
+    .refresh-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--white);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .refresh-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(180deg);
+    }
+
+    .refresh-btn.rotating {
+        animation: spin 0.6s linear;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .chat-header-icon {
+        font-size: 2rem;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .chat-header-info h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .chat-header-info p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        background: #f8fafc;
+    }
+
+    .chat-message {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateY(10px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .chat-message.user {
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .message-avatar.user {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+        color: var(--primary-blue);
+    }
+
+    .message-avatar.bot {
+        background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+        color: var(--white);
+    }
+
+    .message-content {
+        max-width: 70%;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        line-height: 1.6;
+    }
+
+    .chat-message.user .message-content {
+        background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+        color: var(--white);
+        border-bottom-right-radius: 5px;
+    }
+
+    .chat-message.bot .message-content {
+        background: var(--white);
+        color: var(--dark-gray);
+        border-bottom-left-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        color: var(--gray);
+        margin-top: 0.5rem;
+        opacity: 0.7;
+    }
+
+    .chat-message.user .message-time {
+        color: rgba(255, 255, 255, 0.8);
+        text-align: right;
+    }
+
+    .typing-indicator {
+        display: none;
+        padding: 1rem 1.5rem;
+        background: var(--white);
+        border-radius: 15px;
+        width: fit-content;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .typing-indicator.active {
+        display: block;
+    }
+
+    .typing-dots {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .typing-dots span {
+        width: 8px;
+        height: 8px;
+        background: var(--secondary-blue);
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+        }
+        30% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .suggestions-container {
+        padding: 1rem 1.5rem;
+        background: var(--white);
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .suggestion-chip {
+        padding: 0.5rem 1rem;
+        background: var(--light-bg);
+        border: 2px solid #e2e8f0;
+        border-radius: 20px;
+        cursor: pointer;
+        white-space: nowrap;
+        font-size: 0.875rem;
+        color: var(--dark-gray);
+        transition: all 0.3s;
+    }
+
+    .suggestion-chip:hover {
+        background: var(--secondary-blue);
+        color: var(--white);
+        border-color: var(--secondary-blue);
+        transform: translateY(-2px);
+    }
+
+    .chat-input-container {
+        padding: 1.5rem;
+        background: var(--white);
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .chat-input-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 25px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .chat-input:focus {
+        outline: none;
+        border-color: var(--secondary-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .send-button {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+        color: var(--white);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+    }
+
+    .send-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .welcome-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--gray);
+    }
+
+    .welcome-icon {
+        font-size: 4rem;
+        color: var(--secondary-blue);
+        margin-bottom: 1rem;
+    }
+
+    .welcome-message h3 {
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+    }
+
+    .error-message {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        border-left: 4px solid var(--danger);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chatbot-container">
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <div class="chat-header-icon">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="chat-header-info">
+            <h2>FitBot - AI Assistant</h2>
+            <p>Ask me about memberships, workouts, nutrition, or gym management</p>
+        </div>
+        <button id="refreshBtn" class="refresh-btn" title="Clear conversation and start fresh">
+            <i class="fas fa-redo"></i>
+        </button>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-messages" id="chatMessages">
+        <div class="welcome-message">
+            <div class="welcome-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3>Welcome to FitBot! 👋</h3>
+            <p>I'm here to help you with:</p>
+            <p style="margin-top: 1rem;">
+                💪 Workout advice and fitness tips<br>
+                📋 Membership plans and pricing<br>
+                🏋️ Equipment usage and gym policies<br>
+                🍎 Nutrition and health guidance<br>
+                {% if user.is_staff_or_admin %}
+                👥 Gym management assistance
+                {% endif %}
+            </p>
+            <p style="margin-top: 1rem; font-weight: 600;">
+                Try clicking a suggestion below or type your question!
+            </p>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="chat-message bot">
+            <div class="message-avatar bot">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Suggestions -->
+    <div class="suggestions-container" id="suggestionsContainer">
+        <!-- Suggestions will be loaded here -->
+    </div>
+
+    <!-- Chat Input -->
+    <div class="chat-input-container">
+        <form class="chat-input-form" id="chatForm">
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="chatInput" 
+                placeholder="Ask me anything about fitness or the gym..."
+                autocomplete="off"
+            >
+            <button type="submit" class="send-button" id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chatMessages = document.getElementById('chatMessages');
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
+const sendButton = document.getElementById('sendButton');
+const typingIndicator = document.getElementById('typingIndicator');
+const suggestionsContainer = document.getElementById('suggestionsContainer');
+const refreshBtn = document.getElementById('refreshBtn');
+
+// OPTIMIZATION: Use localStorage to persist conversation across page navigations
+const STORAGE_KEYS = {
+    CONVERSATION_ID: 'chatbot_conversation_id_full',
+    MESSAGES: 'chatbot_messages_full'
+};
+
+// Restore conversation from localStorage
+let conversationId = localStorage.getItem(STORAGE_KEYS.CONVERSATION_ID);
+
+// Load suggestions on page load
+loadSuggestions();
+
+// Restore messages from localStorage if exists
+restoreMessages();
+
+// Refresh button handler
+refreshBtn.addEventListener('click', function() {
+    if (confirm('Clear conversation and start fresh?')) {
+        refreshConversation();
+    }
+});
+
+function refreshConversation() {
+    const btn = refreshBtn;
+    btn.classList.add('rotating');
+
+    // Clear all stored data
+    conversationId = null;
+    localStorage.removeItem(STORAGE_KEYS.CONVERSATION_ID);
+    localStorage.removeItem(STORAGE_KEYS.MESSAGES);
+
+    // Reset UI
+    chatMessages.innerHTML = `
+        <div class="welcome-message">
+            <div class="welcome-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3>Welcome to FitBot! 👋</h3>
+            <p>I'm here to help you with:</p>
+            <p style="margin-top: 1rem;">
+                💪 Workout advice and fitness tips<br>
+                📋 Membership plans and pricing<br>
+                🏋️ Equipment usage and gym policies<br>
+                🍎 Nutrition and health guidance<br>
+                👥 Gym management assistance
+            </p>
+            <p style="margin-top: 1rem; font-weight: 600;">
+                Try clicking a suggestion below or type your question!
+            </p>
+        </div>
+        <div class="chat-message bot">
+            <div class="message-avatar bot">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    chatInput.value = '';
+    loadSuggestions();
+
+    setTimeout(() => {
+        btn.classList.remove('rotating');
+    }, 600);
+}
+
+function restoreMessages() {
+    const storedMessages = localStorage.getItem(STORAGE_KEYS.MESSAGES);
+    if (storedMessages) {
+        try {
+            const messages = JSON.parse(storedMessages);
+            if (messages && messages.length > 0) {
+                // Clear welcome message
+                const welcome = chatMessages.querySelector('.welcome-message');
+                if (welcome) {
+                    welcome.remove();
+                }
+
+                // Restore all messages
+                messages.forEach(msg => {
+                    addMessageToDOM(msg.content, msg.sender, msg.isError);
+                });
+            }
+        } catch (e) {
+            console.error('Failed to restore messages:', e);
+        }
+    }
+}
+
+// Form submit handler
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const message = chatInput.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addMessage(message, 'user');
+    chatInput.value = '';
+    
+    // Show typing indicator
+    typingIndicator.classList.add('active');
+    sendButton.disabled = true;
+    
+    // Send message to API
+    try {
+        const response = await fetch('{% url "chatbot_api" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                conversation_id: conversationId
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Hide typing indicator
+        typingIndicator.classList.remove('active');
+        sendButton.disabled = false;
+        
+        if (data.success) {
+            // Add bot response
+            addMessage(data.response, 'bot');
+
+            // OPTIMIZATION: Save conversation ID to localStorage
+            if (data.conversation_id) {
+                conversationId = data.conversation_id;
+                localStorage.setItem(STORAGE_KEYS.CONVERSATION_ID, conversationId);
+            }
+            
+            // Update suggestions if provided
+            if (data.suggestions && data.suggestions.length > 0) {
+                updateSuggestions(data.suggestions);
+            }
+        } else {
+            addMessage(data.response || data.error, 'bot', true);
+        }
+        
+    } catch (error) {
+        typingIndicator.classList.remove('active');
+        sendButton.disabled = false;
+        addMessage('Sorry, I encountered an error. Please make sure Ollama is running: ollama serve', 'bot', true);
+        console.error('Chat error:', error);
+    }
+});
+
+function addMessage(content, sender, isError = false) {
+    addMessageToDOM(content, sender, isError);
+    saveMessageToStorage(content, sender, isError);
+}
+
+function addMessageToDOM(content, sender, isError = false) {
+    // Remove welcome message if exists
+    const welcomeMsg = chatMessages.querySelector('.welcome-message');
+    if (welcomeMsg) {
+        welcomeMsg.remove();
+    }
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    if (sender === 'user') {
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                ${escapeHtml(content)}
+                <div class="message-time">${timeStr}</div>
+            </div>
+            <div class="message-avatar user">
+                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+            </div>
+        `;
+    } else {
+        const contentClass = isError ? 'error-message' : 'message-content';
+        messageDiv.innerHTML = `
+            <div class="message-avatar bot">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="${contentClass}">
+                ${formatBotMessage(content)}
+                <div class="message-time">${timeStr}</div>
+            </div>
+        `;
+    }
+
+    // Insert before typing indicator
+    const typingMsg = chatMessages.querySelector('.chat-message.bot:last-child');
+    chatMessages.insertBefore(messageDiv, typingMsg);
+
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function saveMessageToStorage(content, sender, isError = false) {
+    try {
+        const storedMessages = localStorage.getItem(STORAGE_KEYS.MESSAGES);
+        let messages = storedMessages ? JSON.parse(storedMessages) : [];
+
+        messages.push({
+            content: content,
+            sender: sender,
+            isError: isError,
+            timestamp: new Date().getTime()
+        });
+
+        // Keep only last 100 messages to avoid storage limits
+        if (messages.length > 100) {
+            messages = messages.slice(-100);
+        }
+
+        localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(messages));
+    } catch (e) {
+        // Silently fail if localStorage is full or unavailable
+        console.warn('Failed to save message to storage:', e);
+    }
+}
+
+function formatBotMessage(content) {
+    // Convert markdown-style formatting to HTML
+    let formatted = escapeHtml(content);
+    
+    // Bold text
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Line breaks
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Lists (simple bullet points)
+    formatted = formatted.replace(/^- (.*$)/gm, '• $1');
+    
+    return formatted;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function loadSuggestions() {
+    try {
+        const response = await fetch('{% url "chatbot_suggestions" %}');
+        const data = await response.json();
+        
+        if (data.success && data.suggestions) {
+            updateSuggestions(data.suggestions);
+        }
+    } catch (error) {
+        console.error('Failed to load suggestions:', error);
+    }
+}
+
+function updateSuggestions(suggestions) {
+    suggestionsContainer.innerHTML = '';
+    
+    suggestions.forEach(suggestion => {
+        const chip = document.createElement('div');
+        chip.className = 'suggestion-chip';
+        chip.textContent = suggestion;
+        chip.onclick = () => {
+            chatInput.value = suggestion;
+            chatInput.focus();
+        };
+        suggestionsContainer.appendChild(chip);
+    });
+}
+
+// Auto-focus input
+chatInput.focus();
+</script>
+{% endblock %}

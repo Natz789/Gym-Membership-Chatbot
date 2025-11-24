@@ -1,0 +1,258 @@
+{% extends 'gym_app/base_sidebar.html' %}
+{% load static %}
+
+{% block title %}Confirm Payment{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-card">
+        <h1><i class="fas fa-check-circle"></i> Confirm Payment</h1>
+
+        <div class="payment-details">
+            <h3>Payment Details</h3>
+            <table class="details-table">
+                <tr>
+                    <th>Reference Number:</th>
+                    <td><strong>{{ payment.reference_no }}</strong></td>
+                </tr>
+                <tr>
+                    <th>Member:</th>
+                    <td>{{ payment.user.get_full_name }} ({{ payment.user.email }})</td>
+                </tr>
+                <tr>
+                    <th>Plan:</th>
+                    <td>{{ payment.membership.plan.name }}</td>
+                </tr>
+                <tr>
+                    <th>Amount:</th>
+                    <td><strong>₱{{ payment.amount }}</strong></td>
+                </tr>
+                <tr>
+                    <th>Payment Method:</th>
+                    <td>{{ payment.get_method_display }}</td>
+                </tr>
+                <tr>
+                    <th>Submitted:</th>
+                    <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% if payment.notes %}
+                <tr>
+                    <th>Notes:</th>
+                    <td>{{ payment.notes }}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+
+        <!-- GCash QR Code Section -->
+        {% if payment.method == 'gcash' and qr_code_data %}
+        <div class="gcash-qr-section">
+            <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">
+                <i class="fas fa-qrcode"></i> GCash Payment QR Code
+            </h3>
+
+            <div class="qr-code-container">
+                <img src="{{ qr_code_data }}" alt="GCash Payment QR Code" class="qr-code-image">
+            </div>
+
+            {% if gcash_merchant_info %}
+            <div class="gcash-info-card">
+                <h4><i class="fab fa-google-wallet"></i> GCash Payment Details</h4>
+                <p><strong>Account Name:</strong> {{ gcash_merchant_info.merchant_account }}</p>
+                <p><strong>Account Number:</strong> {{ gcash_merchant_info.merchant_id }}</p>
+                <p><strong>Amount:</strong> ₱{{ payment.amount }}</p>
+                <p><strong>Reference:</strong> {{ payment.reference_no }}</p>
+            </div>
+            {% endif %}
+
+            <div class="payment-instructions-card">
+                <h4><i class="fas fa-clipboard-list"></i> Payment Instructions</h4>
+                <ol>
+                    <li>Customer opens their GCash mobile app</li>
+                    <li>Customer taps "Scan QR"</li>
+                    <li>Customer scans the QR code above</li>
+                    <li>Customer verifies the amount: ₱{{ payment.amount }}</li>
+                    <li>Customer completes the payment</li>
+                    <li>Staff verifies payment completion</li>
+                    <li>Click "Confirm Payment" to activate membership</li>
+                </ol>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            Confirming this payment will:
+            <ul>
+                <li>Activate the member's subscription</li>
+                <li>Generate a kiosk PIN for gym access (if not exists)</li>
+                <li>Send confirmation notification</li>
+            </ul>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Confirm Payment
+                </button>
+                <a href="{% url 'pending_payments' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-card {
+    max-width: 700px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.payment-details {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.details-table {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.details-table tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.details-table th {
+    text-align: left;
+    padding: 0.75rem;
+    width: 40%;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.details-table td {
+    padding: 0.75rem;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.alert-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border-left: 4px solid #3b82f6;
+}
+
+.alert ul {
+    margin: 0.5rem 0 0 1.5rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+    flex: 1;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+    flex: 1;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.gcash-qr-section {
+    margin: 2rem 0;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 12px;
+    border-left: 4px solid #0284c7;
+}
+
+.qr-code-container {
+    display: flex;
+    justify-content: center;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.qr-code-image {
+    max-width: 250px;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.gcash-info-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border-left: 4px solid #10b981;
+}
+
+.gcash-info-card h4 {
+    margin-top: 0;
+    color: #059669;
+}
+
+.gcash-info-card p {
+    margin: 0.5rem 0;
+    color: #374151;
+}
+
+.payment-instructions-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border-left: 4px solid #0284c7;
+}
+
+.payment-instructions-card h4 {
+    margin-top: 0;
+    color: #0284c7;
+}
+
+.payment-instructions-card ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    color: #374151;
+}
+
+.payment-instructions-card li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+</style>
+{% endblock %}

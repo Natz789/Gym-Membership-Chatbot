@@ -1,0 +1,444 @@
+{% extends 'gym_app/base_sidebar.html' %}
+
+{% block title %}Edit Staff - {{ staff_member.get_full_name }} - GymFit Pro{% endblock %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/staff_management.css' %}">
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/create_staff.css' %}">
+
+<!-- Breadcrumb Navigation -->
+<nav aria-label="Breadcrumb" class="breadcrumb-nav">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'members_list' %}">Team Management</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'staff_detail' staff_member.id %}">
+                {{ staff_member.get_full_name }}
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Edit</li>
+    </ol>
+</nav>
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-user-edit"></i> Edit Staff Details</h1>
+</div>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h2>Update Staff Information</h2>
+            <p>Editing: <strong>{{ staff_member.username }}</strong></p>
+        </div>
+
+        <form method="post" action="{% url 'edit_staff' staff_member.id %}" enctype="multipart/form-data" id="editStaffForm">
+            {% csrf_token %}
+
+            <!-- Profile Picture Section -->
+            <div class="form-group">
+                <label for="profile_image">
+                    <i class="fas fa-image"></i> Profile Picture
+                </label>
+                <div class="profile-image-preview">
+                    {% if staff_member.profile_image %}
+                    <img
+                        src="{{ staff_member.profile_image.url }}"
+                        alt="Current profile picture of {{ staff_member.get_full_name }}"
+                        id="imagePreview"
+                        style="max-width: 200px; border-radius: 10px; margin-bottom: 1rem;"
+                    >
+                    {% else %}
+                    <div class="avatar-placeholder" style="width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; background: var(--light-bg); border-radius: 10px; margin-bottom: 1rem;" id="imagePlaceholder">
+                        <i class="fas fa-user-tie" style="font-size: 4rem; color: var(--gray);"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <input
+                    type="file"
+                    id="profile_image"
+                    name="profile_image"
+                    class="form-control"
+                    accept="image/jpeg,image/png,image/webp"
+                    aria-describedby="profile_image_help"
+                    onchange="previewImage(this)"
+                >
+                <small id="profile_image_help" class="form-text">
+                    <i class="fas fa-info-circle"></i>
+                    Recommended: Square image, at least 400x400px. Max 5MB. Accepted formats: JPG, PNG, WebP.
+                </small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name" id="first_name_label">
+                        <i class="fas fa-user"></i> First Name <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="first_name"
+                        name="first_name"
+                        class="form-control"
+                        value="{{ staff_member.first_name }}"
+                        required
+                        aria-required="true"
+                        aria-labelledby="first_name_label"
+                        autocomplete="given-name"
+                        minlength="2"
+                        maxlength="150"
+                    >
+                    <span class="error-message" id="first_name_error" hidden></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name" id="last_name_label">
+                        <i class="fas fa-user"></i> Last Name <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="last_name"
+                        name="last_name"
+                        class="form-control"
+                        value="{{ staff_member.last_name }}"
+                        required
+                        aria-required="true"
+                        aria-labelledby="last_name_label"
+                        autocomplete="family-name"
+                        minlength="2"
+                        maxlength="150"
+                    >
+                    <span class="error-message" id="last_name_error" hidden></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" id="email_label">
+                    <i class="fas fa-envelope"></i> Email <span class="required">*</span>
+                </label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    class="form-control"
+                    value="{{ staff_member.email }}"
+                    required
+                    aria-required="true"
+                    aria-labelledby="email_label"
+                    aria-describedby="email_help"
+                    autocomplete="email"
+                >
+                <small id="email_help" class="form-text">
+                    Staff member will use this email to log in
+                </small>
+                <span class="error-message" id="email_error" hidden></span>
+            </div>
+
+            <div class="form-group">
+                <label for="mobile_no" id="mobile_no_label">
+                    <i class="fas fa-phone"></i> Mobile Number
+                </label>
+                <input
+                    type="tel"
+                    id="mobile_no"
+                    name="mobile_no"
+                    class="form-control"
+                    value="{{ staff_member.mobile_no|default:'' }}"
+                    placeholder="09123456789"
+                    aria-labelledby="mobile_no_label"
+                    autocomplete="tel"
+                    pattern="[0-9]{10,11}"
+                >
+                <small class="form-text">
+                    <i class="fas fa-info-circle"></i>
+                    Optional. Enter 10-11 digit mobile number
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="birthdate" id="birthdate_label">
+                    <i class="fas fa-birthday-cake"></i> Birthdate
+                </label>
+                <input
+                    type="date"
+                    id="birthdate"
+                    name="birthdate"
+                    class="form-control"
+                    value="{% if staff_member.birthdate %}{{ staff_member.birthdate|date:'Y-m-d' }}{% endif %}"
+                    aria-labelledby="birthdate_label"
+                    max="{{ today|date:'Y-m-d' }}"
+                >
+                <small class="form-text">
+                    <i class="fas fa-info-circle"></i>
+                    Age will be calculated automatically
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="address" id="address_label">
+                    <i class="fas fa-map-marker-alt"></i> Address
+                </label>
+                <textarea
+                    id="address"
+                    name="address"
+                    class="form-control"
+                    rows="3"
+                    placeholder="Enter complete address"
+                    aria-labelledby="address_label"
+                    maxlength="500"
+                >{{ staff_member.address|default:'' }}</textarea>
+                <small class="form-text">
+                    <i class="fas fa-info-circle"></i>
+                    Optional. Maximum 500 characters
+                </small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-warning btn-submit">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="{% url 'staff_detail' staff_member.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+        </form>
+
+        <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+            <a href="{% url 'staff_detail' staff_member.id %}" style="color: var(--secondary-blue); text-decoration: none; font-weight: 600; margin-right: 1rem;">
+                <i class="fas fa-arrow-left"></i> Back to Staff Details
+            </a>
+            <a href="{% url 'members_list' %}" style="color: var(--gray); text-decoration: none; font-weight: 600;">
+                <i class="fas fa-list"></i> Back to Team Management
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;" aria-live="polite" aria-busy="false">
+    <div class="loading-spinner">
+        <div class="spinner" role="status"></div>
+        <p>Saving changes...</p>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Image preview with validation
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image size must be less than 5MB', 'error');
+            input.value = '';
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            showToast('Please upload a valid image file (JPG, PNG, or WebP)', 'error');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            let preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('imagePlaceholder');
+
+            if (preview) {
+                preview.src = e.target.result;
+            } else if (placeholder) {
+                // Replace placeholder with image
+                placeholder.outerHTML = `<img src="${e.target.result}" alt="Preview" id="imagePreview" style="max-width: 200px; border-radius: 10px; margin-bottom: 1rem;">`;
+            } else {
+                // Create new image element
+                const container = input.parentElement.querySelector('.profile-image-preview');
+                container.innerHTML = `<img src="${e.target.result}" alt="Preview" id="imagePreview" style="max-width: 200px; border-radius: 10px; margin-bottom: 1rem;">`;
+            }
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+// Form validation
+const form = document.getElementById('editStaffForm');
+
+// Real-time validation
+document.getElementById('first_name').addEventListener('blur', function() {
+    validateField(this, 'First name must be at least 2 characters');
+});
+
+document.getElementById('last_name').addEventListener('blur', function() {
+    validateField(this, 'Last name must be at least 2 characters');
+});
+
+document.getElementById('email').addEventListener('blur', function() {
+    if (!this.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        showFieldError(this, 'Please enter a valid email address');
+    } else {
+        clearFieldError(this);
+    }
+});
+
+document.getElementById('mobile_no').addEventListener('blur', function() {
+    if (this.value && !this.value.match(/^[0-9]{10,11}$/)) {
+        showFieldError(this, 'Mobile number must be 10-11 digits');
+    } else {
+        clearFieldError(this);
+    }
+});
+
+function validateField(field, message) {
+    if (field.value.trim().length < 2) {
+        showFieldError(field, message);
+    } else {
+        clearFieldError(field);
+    }
+}
+
+function showFieldError(field, message) {
+    field.classList.add('is-invalid');
+    const errorSpan = document.getElementById(field.id + '_error');
+    if (errorSpan) {
+        errorSpan.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        errorSpan.hidden = false;
+    }
+}
+
+function clearFieldError(field) {
+    field.classList.remove('is-invalid');
+    const errorSpan = document.getElementById(field.id + '_error');
+    if (errorSpan) {
+        errorSpan.hidden = true;
+    }
+}
+
+// Form submission with confirmation
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Validate all required fields
+    let isValid = true;
+    const requiredFields = ['first_name', 'last_name', 'email'];
+
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+            showFieldError(field, `This field is required`);
+            isValid = false;
+        }
+    });
+
+    if (!isValid) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+
+    // Confirm before submitting
+    if (confirm('Are you sure you want to save these changes?')) {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        document.getElementById('loadingOverlay').setAttribute('aria-busy', 'true');
+        form.submit();
+    }
+});
+
+// Reset form
+function resetForm() {
+    if (confirm('Are you sure you want to reset all changes? This will discard any unsaved modifications.')) {
+        form.reset();
+
+        // Reset image preview
+        {% if staff_member.profile_image %}
+        document.getElementById('imagePreview').src = "{{ staff_member.profile_image.url }}";
+        {% endif %}
+
+        // Clear all errors
+        document.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        document.querySelectorAll('.error-message').forEach(error => {
+            error.hidden = true;
+        });
+
+        showToast('Form has been reset', 'info');
+    }
+}
+
+// Toast notification system
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+
+    const iconMap = {
+        'success': 'check-circle',
+        'error': 'exclamation-circle',
+        'warning': 'exclamation-triangle',
+        'info': 'info-circle'
+    };
+
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="fas fa-${iconMap[type] || 'info-circle'}" aria-hidden="true"></i>
+        </div>
+        <div class="toast-message">${message}</div>
+        <button class="toast-close" onclick="this.parentElement.remove()" aria-label="Close notification">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    `;
+
+    document.getElementById('toastContainer').appendChild(toast);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// Show Django messages as toasts
+{% if messages %}
+{% for message in messages %}
+showToast("{{ message|escapejs }}", "{{ message.tags|default:'info' }}");
+{% endfor %}
+{% endif %}
+
+// Unsaved changes warning
+let formChanged = false;
+form.addEventListener('input', function() {
+    formChanged = true;
+});
+
+window.addEventListener('beforeunload', function(e) {
+    if (formChanged) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+form.addEventListener('submit', function() {
+    formChanged = false;
+});
+</script>
+{% endblock %}

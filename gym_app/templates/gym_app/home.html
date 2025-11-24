@@ -1,0 +1,306 @@
+{% extends 'gym_app/base.html' %}
+{% load static %}
+
+{% block title %}Home - Rhose Gym{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gym_app/css/pages/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Image -->
+{% if hero_sections %}
+    {% for hero in hero_sections %}
+    <div class="hero-image-section" style="--overlay-opacity: {{ hero.overlay_opacity }};">
+        <!-- Background Image -->
+        <picture class="hero-background">
+            {% if hero.mobile_image %}
+            <source media="(max-width: 768px)" srcset="{{ hero.mobile_image.url }}">
+            {% endif %}
+            <img src="{{ hero.background_image.url }}" alt="{{ hero.title }}" class="hero-bg-image">
+        </picture>
+
+        <!-- Overlay -->
+        <div class="hero-overlay"></div>
+
+        <!-- Hero Content -->
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    <i class="fas fa-dumbbell"></i> {{ hero.title }}
+                </h1>
+                {% if hero.subtitle %}
+                <p class="hero-subtitle">{{ hero.subtitle }}</p>
+                {% endif %}
+                {% if hero.description %}
+                <p class="hero-description">{{ hero.description }}</p>
+                {% endif %}
+            </div>
+
+            <!-- CTA Buttons -->
+            <div class="hero-buttons">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-gold btn-lg hero-btn">
+                        <i class="fas fa-chart-line"></i> Go to Dashboard
+                    </a>
+                    <a href="{% url 'membership_plans' %}" class="btn btn-primary btn-lg hero-btn">
+                        <i class="fas fa-tag"></i> View Plans
+                    </a>
+                {% else %}
+                    <a href="{{ hero.cta_primary_link }}" class="btn btn-gold btn-lg hero-btn">
+                        <i class="fas fa-user-plus"></i> {{ hero.cta_primary_text }}
+                    </a>
+                    {% if hero.cta_secondary_text and hero.cta_secondary_link %}
+                    <a href="{{ hero.cta_secondary_link }}" class="btn btn-primary btn-lg hero-btn">
+                        <i class="fas fa-sign-in-alt"></i> {{ hero.cta_secondary_text }}
+                    </a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg hero-btn">
+                        <i class="fas fa-sign-in-alt"></i> Member Login
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <!-- Fallback Hero Section (if no images uploaded) -->
+    <div class="hero">
+        <h1><i class="fas fa-dumbbell"></i> Welcome to Rhose Gym</h1>
+        <p>Transform Your Body, Transform Your Life</p>
+        <div class="hero-buttons">
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="btn btn-gold">
+                    <i class="fas fa-chart-line"></i> Go to Dashboard
+                </a>
+                <a href="{% url 'membership_plans' %}" class="btn btn-primary">
+                    <i class="fas fa-tag"></i> View Plans
+                </a>
+            {% else %}
+                <a href="{% url 'register' %}" class="btn btn-gold">
+                    <i class="fas fa-user-plus"></i> Join Now
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Member Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<!-- Gallery Section (if featured images exist) -->
+{% if gallery_images %}
+<section class="gallery-section">
+    <h2 class="section-title">
+        <i class="fas fa-images"></i>
+        Our Facilities
+    </h2>
+    <div class="gallery-grid">
+        {% for image in gallery_images %}
+        <div class="gallery-item">
+            <img src="{{ image.image.url }}" alt="{{ image.title }}" loading="lazy">
+            <div class="gallery-overlay">
+                <h3>{{ image.title }}</h3>
+                {% if image.description %}
+                <p>{{ image.description|truncatewords:15 }}</p>
+                {% endif %}
+                <span class="gallery-category">{{ image.get_category_display }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Membership Plans Section -->
+{% if membership_plans %}
+<section>
+    <h2 class="section-title">
+        <i class="fas fa-crown"></i>
+        Membership Plans
+    </h2>
+    <div class="plans-grid">
+        {% for plan in membership_plans %}
+        <div class="plan-card {% if plan.duration_days >= 180 %}premium{% endif %}">
+            <div class="plan-icon">
+                <i class="fas fa-{% if plan.duration_days >= 365 %}gem{% elif plan.duration_days >= 180 %}star{% elif plan.duration_days >= 90 %}crown{% else %}medal{% endif %}"></i>
+            </div>
+
+            {% if current_membership and current_membership.plan.id == plan.id %}
+            <div class="current-plan-badge">
+                <i class="fas fa-check-circle"></i> YOUR CURRENT PLAN
+            </div>
+            {% endif %}
+
+            <h3 class="plan-name">{{ plan.name }}</h3>
+
+            <div class="plan-duration">
+                <i class="fas fa-clock"></i> {{ plan.duration_days }} Days Access
+            </div>
+
+            <div class="plan-price">
+                ₱{{ plan.price }}
+                <small>/ {{ plan.duration_days }} days</small>
+            </div>
+
+            <p class="plan-description">
+                {{ plan.description|default:"Full access to all gym facilities, equipment, and amenities for the duration of your membership." }}
+            </p>
+
+            {% if user.is_authenticated and user.role == 'member' %}
+                {% if current_membership %}
+                    {% if current_membership.plan.id == plan.id %}
+                        <button class="btn btn-success" disabled style="opacity: 0.6;">
+                            <i class="fas fa-check"></i> Current Plan
+                        </button>
+                    {% else %}
+                        <button class="btn btn-primary" disabled style="opacity: 0.6;">
+                            <i class="fas fa-info-circle"></i> Already Subscribed
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'subscribe_plan' plan.id %}" class="btn btn-primary">
+                        <i class="fas fa-shopping-cart"></i> Subscribe Now
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login to Subscribe
+                </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Walk-in Passes Section -->
+{% if walk_in_passes %}
+<section>
+    <h2 class="section-title">
+        <i class="fas fa-ticket-alt"></i>
+        Walk-in Passes
+    </h2>
+    <div class="plans-grid">
+        {% for pass in walk_in_passes %}
+        <div class="plan-card">
+            <div class="plan-icon">
+                <i class="fas fa-walking"></i>
+            </div>
+            <h3 class="plan-name">{{ pass.name }}</h3>
+            <div class="plan-duration">
+                <i class="fas fa-clock"></i> Valid for {{ pass.duration_days }} day{{ pass.duration_days|pluralize }}
+            </div>
+            <div class="plan-price">
+                ₱{{ pass.price }}
+                <small>one-time payment</small>
+            </div>
+            <p class="plan-description">
+                {{ pass.description|default:"Perfect for occasional gym visitors. Get access to all facilities without long-term commitment." }}
+            </p>
+            {% if user.is_authenticated and user.is_staff_or_admin %}
+                <a href="{% url 'walkin_purchase' %}" class="btn btn-gold">
+                    <i class="fas fa-cash-register"></i> Process Sale
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-gold">
+                    <i class="fas fa-info-circle"></i> Contact Staff
+                </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<div class="features-section">
+    <h2 class="section-title">Why Choose Rhose Gym?</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-dumbbell"></i>
+            </div>
+            <h3 class="feature-title">Modern Equipment</h3>
+            <p class="feature-desc">State-of-the-art gym equipment for all your fitness needs</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="feature-title">Flexible Hours</h3>
+            <p class="feature-desc">Open early morning to late night for your convenience</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h3 class="feature-title">Easy Management</h3>
+            <p class="feature-desc">Track your membership and payments online anytime</p>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Quick Links (Only visible to admin) -->
+{% if user.is_admin %}
+<div class="admin-quick-links">
+    <h3><i class="fas fa-cog"></i> Admin Quick Links</h3>
+    <div class="quick-links-grid">
+        <a href="{% url 'manage_hero_sections' %}" class="quick-link-card">
+            <i class="fas fa-image"></i>
+            <span>Manage Hero Sections</span>
+        </a>
+        <a href="{% url 'manage_gallery' %}" class="quick-link-card">
+            <i class="fas fa-images"></i>
+            <span>Manage Gallery</span>
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- CTA Section -->
+<div class="cta-section">
+    <h2><i class="fas fa-fire"></i> Ready to Start Your Fitness Journey?</h2>
+    <p style="margin-bottom: 2rem;">Join hundreds of members who have transformed their lives</p>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'register' %}" class="btn btn-primary" style="background: var(--primary-blue); color: var(--white);">
+        <i class="fas fa-rocket"></i> Get Started Today
+    </a>
+    {% endif %}
+</div>
+
+<!-- Chatbot Widget -->
+{% include 'gym_app/includes/chatbot_widget.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Smooth scroll for scroll indicator
+document.querySelector('.scroll-indicator')?.addEventListener('click', function() {
+    window.scrollBy({
+        top: window.innerHeight - 100,
+        behavior: 'smooth'
+    });
+});
+
+// Parallax effect for hero background (optional)
+window.addEventListener('scroll', function() {
+    const heroSection = document.querySelector('.hero-image-section');
+    if (heroSection) {
+        const scrolled = window.pageYOffset;
+        const parallax = heroSection.querySelector('.hero-bg-image');
+        if (parallax && scrolled < heroSection.offsetHeight) {
+            parallax.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+    }
+});
+</script>
+{% endblock %}
