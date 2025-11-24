@@ -20,6 +20,24 @@ from .models import (
 )
 
 
+# ==================== Health Check (for Docker) ====================
+
+def health_check(request):
+    """Health check endpoint for Docker/container orchestration"""
+    try:
+        # Try to access database
+        User.objects.exists()
+        return JsonResponse({
+            'status': 'healthy',
+            'message': 'Service is running normally'
+        }, status=200)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'unhealthy',
+            'message': str(e)
+        }, status=503)
+
+
 # ==================== Public Views ====================
 
 def home(request):

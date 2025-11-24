@@ -1,0 +1,41 @@
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV OLLAMA_HOST=0.0.0.0:11434
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    libpq-dev \
+    curl \
+    wget \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better layer caching
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Copy project files
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p staticfiles media logs && \
+    chmod +x entrypoint.sh
+
+# Collect static files (won't fail if database not ready)
+RUN python manage.py collectstatic --noinput || true
+
+# Expose ports
+# 8000 for Django, 11434 for Ollama
+EXPOSE 8000 11434
+
+# Run entrypoint script
+CMD ["/app/entrypoint.sh"]
