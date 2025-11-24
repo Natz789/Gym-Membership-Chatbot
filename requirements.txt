@@ -3,7 +3,7 @@ psycopg2-binary==2.9.10
 python-decouple==3.8
 dj-database-url==2.1.0
 gunicorn==21.2.0
-ollama==0.6.1
+huggingface-hub==0.23.0
 qrcode==7.4.2
 Pillow==11.0.0
 redis==5.0.1

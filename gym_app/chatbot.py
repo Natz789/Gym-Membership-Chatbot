@@ -1,12 +1,13 @@
 """
 Enhanced AI Chatbot Engine for Rhose Gym
 Advanced capabilities: Analytics, Operations, Member Management
-Permanently configured with Qwen2.5-0.5B model
-Optimized for E595 ThinkPad (8-16GB RAM)
+Configured with HuggingFace Inference API for cloud-based LLM access
 Performance optimized with caching for faster response times
 
-Version 3.0 - Simplified Configuration:
-- Hardcoded Qwen2.5-0.5B model (ultra-fast, 4GB RAM)
+Version 4.0 - HuggingFace Integration:
+- Uses HuggingFace Inference API (Mistral-7B or other models)
+- No local Ollama dependency required
+- Works seamlessly on Render and other cloud platforms
 - Intent detection and intelligent routing
 - Advanced analytics and reporting
 - Member lookup and management
@@ -15,11 +16,12 @@ Version 3.0 - Simplified Configuration:
 - Audit logging for all operations
 """
 
-import ollama
 import uuid
 import time
+from huggingface_hub import InferenceClient
 from django.conf import settings
 from django.core.cache import cache
+from decouple import config
 from .models import (
     User, MembershipPlan, FlexibleAccess, UserMembership, Payment, Attendance,
     Conversation, ConversationMessage, AuditLog
@@ -31,18 +33,21 @@ import json
 
 
 class GymChatbot:
-    """AI-powered chatbot for gym assistance - Permanently configured with Qwen2.5-0.5B"""
+    """AI-powered chatbot for gym assistance - Using HuggingFace Inference API"""
 
-    # Hardcoded configuration for Qwen2.5-0.5B model
-    MODEL = 'qwen2.5:0.5b'
+    # HuggingFace Inference API Configuration
+    # Default to Mistral-7B (free tier available)
+    MODEL = config('HF_MODEL', default='mistralai/Mistral-7B-Instruct-v0.2')
     TEMPERATURE = 0.7
-    TOP_P = 0.9
-    MAX_TOKENS = 512
+    MAX_TOKENS = 256  # Reduced for faster responses and cost efficiency
     CONTEXT_WINDOW = 6
     ENABLE_STREAMING = False
     ENABLE_PERSISTENCE = True
-    OLLAMA_HOST = 'http://localhost:11434'
     TIMEOUT_SECONDS = 30
+
+    # HuggingFace API Configuration
+    HF_API_KEY = config('HF_API_KEY', default=None)
+    HF_API_URL = config('HF_API_URL', default='https://api-inference.huggingface.co')
 
     def __init__(self, user=None, conversation_id=None, session_key=None):
         self.user = user
@@ -50,6 +55,15 @@ class GymChatbot:
         self.model = self.MODEL
         self.conversation = None
         self.conversation_history = []
+
+        # Initialize HuggingFace Inference Client
+        if self.HF_API_KEY:
+            self.hf_client = InferenceClient(
+                api_key=self.HF_API_KEY,
+                model=self.MODEL
+            )
+        else:
+            self.hf_client = None
 
         # Initialize tools for advanced features
         self.tools = ChatbotTools(user)
@@ -110,12 +124,11 @@ class GymChatbot:
                 self.conversation.generate_title()
 
     @classmethod
-    def get_ollama_options(cls):
-        """Get formatted options for Ollama API"""
+    def get_hf_options(cls):
+        """Get formatted options for HuggingFace Inference API"""
         return {
             'temperature': cls.TEMPERATURE,
-            'top_p': cls.TOP_P,
-            'num_predict': cls.MAX_TOKENS,
+            'max_new_tokens': cls.MAX_TOKENS,
         }
 
     @staticmethod
@@ -509,27 +522,41 @@ COMMON MISTAKES:
         })
 
         try:
-            # ========== OPTIMIZE OLLAMA PARAMETERS ==========
-            # BEFORE: max_tokens=512 (default)
-            # AFTER: max_tokens=256 (50% reduction for short responses)
-            ollama_options = self.get_ollama_options()
+            # Check if HuggingFace API key is configured
+            if not self.HF_API_KEY:
+                return {
+                    "success": False,
+                    "error": "HuggingFace API key not configured",
+                    "response": "The chatbot is not properly configured. Please contact the administrator."
+                }
 
-            # Override max_tokens for faster responses (queries are usually simple)
-            # Short responses: 256 tokens (~1000 chars) is sufficient
-            ollama_options['num_predict'] = 256
+            # ========== OPTIMIZE HUGGINGFACE PARAMETERS ==========
+            hf_options = self.get_hf_options()
 
             if self.ENABLE_STREAMING:
                 # Streaming response
                 return self._chat_stream(messages, user_message, start_time, intent)
             else:
-                # Standard response with optimized context
-                response = ollama.chat(
-                    model=self.model,
-                    messages=messages,
-                    options=ollama_options
+                # Standard response with HuggingFace Inference API
+                # Format messages for HuggingFace (convert system message to context)
+                formatted_messages = []
+                for msg in messages:
+                    formatted_messages.append({
+                        "role": msg["role"],
+                        "content": msg["content"]
+                    })
+
+                # Call HuggingFace Inference API
+                response = self.hf_client.text_generation(
+                    prompt=self._format_prompt_for_hf(formatted_messages),
+                    temperature=hf_options['temperature'],
+                    max_new_tokens=hf_options['max_new_tokens'],
+                    do_sample=True,
+                    top_p=0.95
                 )
 
-                assistant_message = response['message']['content']
+                # Extract assistant message
+                assistant_message = response if isinstance(response, str) else response.get('generated_text', '')
 
                 # Calculate response time
                 response_time_ms = int((time.time() - start_time) * 1000)
@@ -563,15 +590,19 @@ COMMON MISTAKES:
 
         except Exception as e:
             error_msg = str(e)
-            if "connection" in error_msg.lower():
-                friendly_error = f"Cannot connect to Ollama. Please ensure:\n1. Ollama is installed\n2. Run 'ollama serve' in terminal\n3. Model '{self.model}' is pulled: 'ollama pull {self.model}'"
+            if "401" in error_msg or "authentication" in error_msg.lower():
+                friendly_error = "HuggingFace API key is invalid or expired. Please check your credentials."
+            elif "rate" in error_msg.lower():
+                friendly_error = "API rate limit exceeded. Please try again in a moment."
+            elif "timeout" in error_msg.lower():
+                friendly_error = "Request timed out. The AI service is taking too long to respond."
             else:
                 friendly_error = f"Chatbot error: {error_msg}"
 
             # Log error
             if self.user:
                 AuditLog.log(
-                    action='report_generated',
+                    action='chatbot_error',
                     user=self.user,
                     description=f'Chatbot error: {error_msg}',
                     severity='error',
@@ -581,24 +612,49 @@ COMMON MISTAKES:
             return {
                 "success": False,
                 "error": friendly_error,
-                "response": "I'm having trouble connecting right now. Please check that Ollama is running and the model is available."
+                "response": "I'm having trouble processing your request right now. Please try again in a moment."
             }
 
+    def _format_prompt_for_hf(self, messages):
+        """Format messages for HuggingFace API format"""
+        prompt = ""
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if role == "system":
+                prompt += f"System: {content}\n\n"
+            elif role == "user":
+                prompt += f"User: {content}\n"
+            elif role == "assistant":
+                prompt += f"Assistant: {content}\n"
+
+        prompt += "Assistant:"
+        return prompt
+
     def _chat_stream(self, messages, user_message, start_time, intent='informational'):
-        """Handle streaming responses"""
+        """Handle streaming responses with HuggingFace API"""
         try:
-            full_response = ""
-            stream = ollama.chat(
-                model=self.model,
-                messages=messages,
-                options=self.get_ollama_options(),
-                stream=True
+            if not self.HF_API_KEY:
+                return {
+                    "success": False,
+                    "error": "HuggingFace API key not configured",
+                    "response": "The chatbot is not properly configured."
+                }
+
+            # HuggingFace InferenceClient doesn't support true streaming in the same way
+            # So we'll use the regular text generation and treat it as non-streamed
+            hf_options = self.get_hf_options()
+            prompt = self._format_prompt_for_hf(messages)
+
+            response = self.hf_client.text_generation(
+                prompt=prompt,
+                temperature=hf_options['temperature'],
+                max_new_tokens=hf_options['max_new_tokens'],
+                do_sample=True,
+                top_p=0.95
             )
 
-            for chunk in stream:
-                if 'message' in chunk and 'content' in chunk['message']:
-                    full_response += chunk['message']['content']
-
+            full_response = response if isinstance(response, str) else response.get('generated_text', '')
             response_time_ms = int((time.time() - start_time) * 1000)
 
             # Update history
@@ -623,10 +679,11 @@ COMMON MISTAKES:
                 "streaming": True
             }
         except Exception as e:
+            error_msg = str(e)
             return {
                 "success": False,
-                "error": str(e),
-                "response": "Streaming error occurred."
+                "error": error_msg,
+                "response": "I encountered an error while processing your request. Please try again."
             }
 
     def _log_chatbot_usage(self, user_message, bot_response, intent, response_time):
@@ -685,33 +742,29 @@ COMMON MISTAKES:
         return suggestions
 
     @staticmethod
-    def get_available_models():
-        """Get list of available Ollama models on the system"""
-        try:
-            models = ollama.list()
-            available = []
-            for model in models.get('models', []):
-                model_name = model.get('name', '')
-                if model_name:
-                    available.append(model_name)
-            return available
-        except Exception as e:
-            return []
+    def check_hf_status():
+        """Check if HuggingFace API key is configured"""
+        hf_api_key = config('HF_API_KEY', default=None)
+        if hf_api_key:
+            return {
+                "status": "configured",
+                "message": "HuggingFace API is configured and ready"
+            }
+        else:
+            return {
+                "status": "not_configured",
+                "message": "HuggingFace API key is not set. Please configure HF_API_KEY environment variable."
+            }
 
     @staticmethod
-    def check_ollama_status():
-        """Check if Ollama service is running"""
-        try:
-            ollama.list()
-            return {
-                "status": "running",
-                "message": "Ollama is running successfully"
-            }
-        except Exception as e:
-            return {
-                "status": "error",
-                "message": f"Ollama is not running: {str(e)}"
-            }
+    def get_supported_models():
+        """Get list of supported HuggingFace models"""
+        return [
+            "mistralai/Mistral-7B-Instruct-v0.2",
+            "meta-llama/Llama-2-7b-chat-hf",
+            "tiiuae/falcon-7b-instruct",
+            "gpt2",  # Smaller model for testing
+        ]
 
     @staticmethod
     def clear_cache():
